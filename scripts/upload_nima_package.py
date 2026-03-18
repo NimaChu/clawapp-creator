@@ -1,0 +1,339 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import platform
+import re
+import subprocess
+import sys
+import tempfile
+import urllib.parse
+from pathlib import Path
+
+ALLOWED_MODEL_CATEGORIES = {"none", "text", "multimodal", "code"}
+DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[1] / "upload-config.json"
+DIRECT_UPLOAD_THRESHOLD_BYTES = int(4.5 * 1024 * 1024)
+BLOB_API_URL = "https://vercel.com/api/blob"
+BLOB_API_VERSION = "12"
+DEFAULT_KEYCHAIN_SERVICE = "nima-tech-space-upload"
+
+
+def run_curl(command: list[str]) -> str:
+    result = subprocess.run(command, check=False, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise SystemExit(result.stderr.strip() or "curl request failed")
+    return result.stdout
+
+
+def run_curl_json(command: list[str], error_message: str) -> dict:
+    output = run_curl(command)
+    try:
+        payload = json.loads(output)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"{error_message}: {output.strip() or 'invalid JSON response'}") from exc
+
+    if not isinstance(payload, dict):
+        raise SystemExit(f"{error_message}: response must be a JSON object")
+
+    return payload
+
+
+def sanitize_blob_pathname(filename: str) -> str:
+    safe_name = re.sub(r"[^a-zA-Z0-9._-]+", "-", filename)
+    return f"package-uploads/{safe_name}"
+
+
+def normalize_slug(value: str) -> str:
+    normalized = re.sub(r"[^a-z0-9-]+", "-", value.strip().lower().replace("_", "-").replace(" ", "-"))
+    return re.sub(r"^-+|-+$", "", normalized)
+
+
+def load_manifest_slug_from_zip(package_path: Path) -> str:
+    import zipfile
+
+    try:
+        with zipfile.ZipFile(package_path) as zf:
+            with zf.open("manifest.json") as manifest_file:
+                manifest = json.load(manifest_file)
+    except KeyError as exc:
+        raise SystemExit("package missing manifest.json") from exc
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"manifest.json is not valid JSON: {exc}") from exc
+
+    if not isinstance(manifest, dict):
+        raise SystemExit("manifest.json must be a JSON object")
+
+    slug = normalize_slug(str(manifest.get("slug") or manifest.get("id") or ""))
+    if not slug:
+        raise SystemExit("manifest.json must contain a valid slug or id")
+
+    return slug
+
+
+def check_slug(site_url: str, cookie_path: Path, slug: str) -> dict:
+    payload = run_curl_json([
+        "curl",
+        "-sS",
+        "-b",
+        str(cookie_path),
+        f"{site_url}/api/app-slug-check?slug={urllib.parse.quote(slug)}",
+    ], "slug check failed")
+
+    if not payload.get("success"):
+        raise SystemExit(payload.get("error") or "slug check failed")
+
+    return payload
+
+
+def summarize_slug_check(slug_check: dict) -> str:
+    slug = slug_check.get("slug") or ""
+    if slug_check.get("exists") and not slug_check.get("canOverwrite"):
+        owner_name = slug_check.get("ownerName") or "unknown user"
+        return f"slug '{slug}' is owned by {owner_name} and cannot be uploaded by this account"
+    if slug_check.get("exists") and slug_check.get("canOverwrite"):
+        return f"slug '{slug}' already exists and will be overwritten by this account"
+    return f"slug '{slug}' is available"
+
+
+def upload_via_blob(site_url: str, cookie_path: Path, package_path: Path) -> dict:
+    pathname = sanitize_blob_pathname(package_path.name)
+    token_payload = run_curl_json([
+        "curl",
+        "-sS",
+        "-b",
+        str(cookie_path),
+        "-H",
+        "Content-Type: application/json",
+        "-d",
+        json.dumps({
+            "type": "blob.generate-client-token",
+            "payload": {
+                "pathname": pathname,
+                "clientPayload": None,
+                "multipart": False,
+            },
+        }),
+        f"{site_url}/api/upload-package-token",
+    ], "failed to get Blob client token")
+
+    client_token = str(token_payload.get("clientToken") or "").strip()
+    if not client_token:
+        raise SystemExit("failed to get Blob client token")
+
+    pathname_query = urllib.parse.urlencode({"pathname": pathname})
+    upload_payload = run_curl_json([
+        "curl",
+        "-sS",
+        "-X",
+        "PUT",
+        "-H",
+        f"authorization: Bearer {client_token}",
+        "-H",
+        f"x-api-version: {BLOB_API_VERSION}",
+        "-H",
+        "x-vercel-blob-access: public",
+        "-H",
+        "x-content-type: application/zip",
+        "-H",
+        f"x-content-length: {package_path.stat().st_size}",
+        "--data-binary",
+        f"@{package_path}",
+        f"{BLOB_API_URL}/?{pathname_query}",
+    ], "failed to upload package to Blob")
+
+    if not upload_payload.get("url") or not upload_payload.get("pathname"):
+        raise SystemExit("Blob upload did not return url/pathname")
+
+    return upload_payload
+
+
+def load_config(path: Path) -> dict:
+    if not path.exists():
+        return {"siteUrl": "", "email": "", "password": "", "useKeychain": False, "keychainService": DEFAULT_KEYCHAIN_SERVICE}
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"invalid config JSON: {exc}") from exc
+
+    if not isinstance(data, dict):
+        raise SystemExit("config file must contain a JSON object")
+
+    return {
+        "siteUrl": str(data.get("siteUrl", "")),
+        "email": str(data.get("email", "")),
+        "password": str(data.get("password", "")),
+        "useKeychain": bool(data.get("useKeychain", False)),
+        "keychainService": str(data.get("keychainService", DEFAULT_KEYCHAIN_SERVICE) or DEFAULT_KEYCHAIN_SERVICE),
+    }
+
+
+def save_config(path: Path, site_url: str, email: str, password: str) -> None:
+    path.write_text(
+        json.dumps({
+            "siteUrl": site_url,
+            "email": email,
+            "password": password,
+        }, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    os.chmod(path, 0o600)
+
+
+def supports_keychain() -> bool:
+    return platform.system() == "Darwin"
+
+
+def read_password_from_keychain(service: str, account: str) -> str:
+    result = subprocess.run(
+        [
+            "security",
+            "find-generic-password",
+            "-a",
+            account,
+            "-s",
+            service,
+            "-w",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return ""
+    return result.stdout.strip()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Upload a packaged app to Nima Tech Space.")
+    parser.add_argument("--site-url", help="Base site URL, for example http://127.0.0.1:4323")
+    parser.add_argument("--email", help="Login email")
+    parser.add_argument("--password", help="Login password")
+    parser.add_argument("--package", required=True, help="Path to package zip")
+    parser.add_argument("--model-category", default="none", help="none, text, multimodal, or code")
+    parser.add_argument("--config", default=str(DEFAULT_CONFIG_PATH), help="Path to reusable upload config JSON")
+    parser.add_argument("--save-config", action="store_true", help="Save provided credentials back into the config file")
+    parser.add_argument("--dry-run", action="store_true", help="Validate login, manifest, package size, and slug ownership without uploading")
+    args = parser.parse_args()
+
+    if args.model_category not in ALLOWED_MODEL_CATEGORIES:
+        raise SystemExit("model category must be one of: none, text, multimodal, code")
+
+    package_path = Path(args.package).expanduser().resolve()
+    if not package_path.is_file():
+        raise SystemExit(f"package not found: {package_path}")
+
+    config_path = Path(args.config).expanduser().resolve()
+    config = load_config(config_path)
+
+    site_url = (args.site_url or config.get("siteUrl") or "").strip()
+    email = (args.email or config.get("email") or "").strip()
+    keychain_service = str(config.get("keychainService") or DEFAULT_KEYCHAIN_SERVICE).strip() or DEFAULT_KEYCHAIN_SERVICE
+    config_password = (config.get("password") or "").strip()
+    keychain_password = ""
+    if not args.password and config.get("useKeychain") and supports_keychain() and email:
+        keychain_password = read_password_from_keychain(keychain_service, email)
+    password = (args.password or config_password or keychain_password or "").strip()
+
+    if not site_url or not email or not password:
+        raise SystemExit(
+            f"missing credentials: provide --site-url/--email/--password or fill {config_path}"
+        )
+
+    base_url = site_url.rstrip("/")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        cookie_path = Path(temp_dir) / "cookies.txt"
+
+        login_payload = run_curl_json([
+            "curl",
+            "-sS",
+            "-c",
+            str(cookie_path),
+            "-H",
+            "Content-Type: application/x-www-form-urlencoded",
+            "--data-urlencode",
+            f"email={email}",
+            "--data-urlencode",
+            f"password={password}",
+            f"{base_url}/api/auth/login",
+        ], "login failed")
+        if not login_payload.get("success"):
+            raise SystemExit(login_payload.get("error") or "login failed")
+
+        slug = load_manifest_slug_from_zip(package_path)
+        slug_check = check_slug(base_url, cookie_path, slug)
+        if slug_check.get("exists") and not slug_check.get("canOverwrite"):
+            owner_name = slug_check.get("ownerName") or "unknown user"
+            raise SystemExit(
+                f"slug conflict: '{slug}' is already owned by {owner_name}. Change the slug before uploading."
+            )
+
+        if slug_check.get("exists") and slug_check.get("canOverwrite"):
+            print(f"Notice: '{slug}' already exists and will be overwritten by this account.", file=sys.stderr)
+
+        if args.dry_run:
+            print(json.dumps({
+                "success": True,
+                "dryRun": True,
+                "package": str(package_path),
+                "packageSizeBytes": package_path.stat().st_size,
+                "uploadStrategy": "blob-client-upload" if package_path.stat().st_size > DIRECT_UPLOAD_THRESHOLD_BYTES else "direct-form-upload",
+                "slug": slug,
+                "slugCheck": slug_check,
+                "summary": summarize_slug_check(slug_check),
+            }, ensure_ascii=False, indent=2))
+            return
+
+        if package_path.stat().st_size > DIRECT_UPLOAD_THRESHOLD_BYTES:
+            blob_upload = upload_via_blob(base_url, cookie_path, package_path)
+            upload_payload = run_curl_json([
+                "curl",
+                "-sS",
+                "-b",
+                str(cookie_path),
+                "-H",
+                "Content-Type: application/json",
+                "-d",
+                json.dumps({
+                    "blobUrl": blob_upload["url"],
+                    "blobPathname": blob_upload["pathname"],
+                    "modelCategory": args.model_category,
+                }),
+                f"{base_url}/api/import-app",
+            ], "upload finalize failed")
+        else:
+            upload_payload = run_curl_json([
+                "curl",
+                "-sS",
+                "-b",
+                str(cookie_path),
+                "-F",
+                f"package=@{package_path}",
+                "-F",
+                f"modelCategory={args.model_category}",
+                f"{base_url}/api/import-app",
+            ], "upload failed")
+
+        if not upload_payload.get("success"):
+            raise SystemExit(upload_payload.get("error") or "upload failed")
+
+    if args.save_config:
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        save_config(config_path, base_url, email, password)
+
+    app = upload_payload["app"]
+    print(json.dumps({
+        "success": True,
+        "slug": app.get("slug"),
+        "detailUrl": f"{base_url}/apps/{app.get('slug')}",
+        "launchUrl": f"{base_url}{app.get('launchUrl', '')}",
+        "downloadUrl": f"{base_url}{app.get('downloadUrl', '')}",
+        "overwritten": upload_payload.get("overwritten", False),
+    }, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()
