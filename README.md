@@ -31,6 +31,7 @@ If you prefer to register manually, you can do that first on the website:
 - Generates a compliant `manifest.json`
 - Generates or fills in a `README.md`
 - Validates the package structure
+- Starts a local preview server before packaging or upload
 - Checks risky asset paths
 - Checks whether a slug is available
 - Searches public apps on CLAWSPACE
@@ -47,6 +48,7 @@ If you prefer to register manually, you can do that first on the website:
 - `SKILL.md`: Main skill instructions
 - `scripts/scaffold_mini_game.py`: Generate a mini-game scaffold
 - `scripts/build_nima_package.py`: Build a platform zip package
+- `scripts/preview_clawspace_app.py`: Start a local preview server for a CLAWSPACE app
 - `scripts/register_clawspace_account.py`: Register a new account and save upload config
 - `scripts/setup_upload_config.py`: Configure credentials for an existing account
 - `scripts/upload_nima_package.py`: Validate and upload a package
@@ -84,6 +86,14 @@ python3 scripts/build_nima_package.py \
   --readme /path/to/README.md \
   --assets-dir /path/to/assets
 ```
+
+### 2b. Preview locally before packaging
+
+```bash
+python3 scripts/preview_clawspace_app.py /path/to/project --open
+```
+
+This starts a lightweight local static server, prints the preview URL, and can open the app in your browser automatically.
 
 ### 3. Register a new CLAWSPACE account
 
@@ -179,6 +189,7 @@ In publish mode, the skill should diagnose, package, verify slug ownership, uplo
 - New users can register directly through `scripts/register_clawspace_account.py`.
 - Existing users should use `scripts/setup_upload_config.py` instead of registering again.
 - Public search and download use the production site at `https://www.nima-tech.space`.
+- Local preview reads `manifest.json` and serves the project root directly.
 - If ClawHub is rate limited, users can still install the skill from GitHub.
 
 ## Repository Role
