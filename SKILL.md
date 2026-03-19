@@ -78,6 +78,7 @@ Use `assets/README.template.md` as the starting template when the app needs a ba
 If the user wants to start from zero instead of retrofitting an existing app, copy one of these starter assets first:
 
 - `assets/starter-mini-game/` for a no-model static game
+- `assets/starter-ocr/` for a multimodal OCR and image-analysis app
 - `assets/platform-llm-client.js` for a minimal platform model client
 
 Or scaffold directly:

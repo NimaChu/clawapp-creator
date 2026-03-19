@@ -8,7 +8,7 @@ These are the first starter templates designed for CLAWSPACE creators and OpenCl
 - easy to customize
 - easy to package and upload
 - small enough to stay within the CLAWSPACE static-app model
-- clear fit for either `none` or `text` model categories
+- clear fit for `none`, `text`, or `multimodal` model categories
 
 ## Template lineup
 
@@ -100,12 +100,36 @@ Why it works:
 - helps creators understand the platform LLM path
 - easy to adapt into multiple AI text products
 
+### 5. `ocr-tool`
+
+Type:
+
+- multimodal OCR and image analysis app
+
+Best for:
+
+- OCR tools
+- screenshot readers
+- chart and receipt analyzers
+- image understanding demos
+
+Model category:
+
+- `multimodal`
+
+Why it works:
+
+- demonstrates the platform multimodal API with a real image upload flow
+- can be repurposed into many practical AI tools
+- already includes starter icon and thumbnail assets
+
 ## Recommended prompts for OpenClaw
 
 - "帮我用 orbit-tap 模板做一个可上传到 CLAWSPACE 的小游戏。"
 - "帮我用 memory-flip 模板做一个校园主题翻牌游戏。"
 - "帮我把 focus-timer 模板改成一个番茄钟工具并发布。"
 - "帮我用 ai-rewriter 模板做一个文案润色应用，并接入平台模型。"
+- "帮我用 ocr-tool 模板做一个可上传到 CLAWSPACE 的图片识别应用。"
 
 ## Scaffold examples
 
@@ -139,4 +163,12 @@ python3 scripts/scaffold_mini_game.py \
   --out /path/to/ai-rewriter \
   --name "AI Rewriter" \
   --description "输入一句草稿，生成更自然的表达版本。"
+```
+
+```bash
+python3 scripts/scaffold_mini_game.py \
+  --template ocr-tool \
+  --out /path/to/ocr-tool \
+  --name "在线 OCR 工具" \
+  --description "上传图片并识别文字、表格或图像内容。"
 ```

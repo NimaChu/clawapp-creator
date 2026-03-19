@@ -48,6 +48,16 @@ TEMPLATES = {
         "default_steps": ["输入原始文本", "点击生成", "查看润色结果"],
         "default_model_category": "text",
     },
+    "ocr-tool": {
+        "dir": "starter-ocr",
+        "default_category": "AI工具",
+        "default_description": "上传图片并调用平台多模态模型，识别文字与图像内容。",
+        "default_features": ["支持 OCR 与图片内容分析", "已接入平台多模态模型接口"],
+        "default_tags": ["AI", "OCR", "Vision"],
+        "default_stack": ["HTML", "CSS", "JavaScript", "Platform Multimodal API"],
+        "default_steps": ["上传图片", "点击开始分析", "查看识别结果"],
+        "default_model_category": "multimodal",
+    },
 }
 
 
@@ -90,6 +100,9 @@ def main() -> None:
 
     shutil.copytree(template_dir, app_dir)
     assets_dir.mkdir(parents=True, exist_ok=True)
+    if args.template == "ocr-tool":
+        shutil.copy(template_dir / "ocr-icon.svg", assets_dir / "ocr-icon.svg")
+        shutil.copy(template_dir / "ocr-thumb.svg", assets_dir / "ocr-thumb.svg")
 
     replacements = {
         "__APP_NAME__": args.name,
@@ -116,9 +129,9 @@ def main() -> None:
             "github": "",
             "homepage": "",
         },
-        "thumbnail": "",
-        "icon": "",
-        "screenshots": [],
+        "thumbnail": "assets/ocr-thumb.svg" if args.template == "ocr-tool" else "",
+        "icon": "assets/ocr-icon.svg" if args.template == "ocr-tool" else "",
+        "screenshots": ["assets/ocr-thumb.svg"] if args.template == "ocr-tool" else [],
         "features": template["default_features"],
         "tags": template["default_tags"],
         "techStack": template["default_stack"],
