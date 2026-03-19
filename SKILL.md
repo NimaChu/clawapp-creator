@@ -40,15 +40,16 @@ Prefer asking this before you attempt upload-related commands.
 3. Decide whether the app needs a model.
 4. Generate a compliant `manifest.json`, optional `README.md`, and `assets/`.
 5. If there is no project yet, scaffold one with `scripts/scaffold_mini_game.py`.
-6. Package everything into a zip with `scripts/build_nima_package.py`.
-7. Diagnose with `scripts/diagnose_nima_package.py` before upload when helpful.
-8. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
-9. Verify the detail page and launch page after upload.
+6. Preview locally with `scripts/preview_clawspace_app.py` when the user wants a browser check before package or upload.
+7. Package everything into a zip with `scripts/build_nima_package.py`.
+8. Diagnose with `scripts/diagnose_nima_package.py` before upload when helpful.
+9. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
+10. Verify the detail page and launch page after upload.
 
 For discovery and reuse:
 
-10. Search public apps with `scripts/search_clawspace_apps.py`
-11. Download public app zips with `scripts/download_clawspace_app.py`
+11. Search public apps with `scripts/search_clawspace_apps.py`
+12. Download public app zips with `scripts/download_clawspace_app.py`
 
 ## Package Rules
 
@@ -112,6 +113,14 @@ After scaffolding, encourage the user to add:
 - at least one screenshot in `assets/`
 
 If they skip cover assets, the site can still publish the app with a default generated cover, but custom art makes the listing look much better.
+
+Use:
+
+```bash
+python3 scripts/preview_clawspace_app.py /path/to/project --open
+```
+
+This starts a lightweight local static server from the project root, reads `manifest.json`, and opens the packaged entry in the browser.
 
 Use:
 
