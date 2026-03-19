@@ -7,6 +7,49 @@ import re
 import shutil
 from pathlib import Path
 
+TEMPLATES = {
+    "orbit-tap": {
+        "dir": "starter-mini-game",
+        "default_category": "小游戏",
+        "default_description": "点击移动中的星球，45 秒内拿到最高分。",
+        "default_features": ["轻量、即开即玩的点击得分小游戏"],
+        "default_tags": ["Game", "HTML5", "Starter"],
+        "default_stack": ["HTML", "CSS", "JavaScript"],
+        "default_steps": ["打开应用", "点击开始", "完成一局游戏"],
+        "default_model_category": "none",
+    },
+    "memory-flip": {
+        "dir": "starter-memory-flip",
+        "default_category": "小游戏",
+        "default_description": "翻开卡片配对，在最短时间内完成整局记忆挑战。",
+        "default_features": ["经典翻牌配对玩法", "适合二次改造成主题小游戏"],
+        "default_tags": ["Game", "Puzzle", "Memory"],
+        "default_stack": ["HTML", "CSS", "JavaScript"],
+        "default_steps": ["打开应用", "开始翻牌", "完成全部配对"],
+        "default_model_category": "none",
+    },
+    "focus-timer": {
+        "dir": "starter-focus-timer",
+        "default_category": "工具",
+        "default_description": "一个轻量专注计时器，带任务标题、番茄钟和完成记录。",
+        "default_features": ["适合上传的静态效率工具", "可快速改造成主题型实用应用"],
+        "default_tags": ["Utility", "Timer", "Productivity"],
+        "default_stack": ["HTML", "CSS", "JavaScript"],
+        "default_steps": ["输入任务标题", "开始专注", "记录完成结果"],
+        "default_model_category": "none",
+    },
+    "ai-rewriter": {
+        "dir": "starter-ai-rewriter",
+        "default_category": "AI工具",
+        "default_description": "输入一句草稿，调用平台模型生成更自然的表达版本。",
+        "default_features": ["已接入平台统一模型接口", "适合改造成文案、灵感或对话类应用"],
+        "default_tags": ["AI", "Text", "Writing"],
+        "default_stack": ["HTML", "CSS", "JavaScript", "Platform LLM API"],
+        "default_steps": ["输入原始文本", "点击生成", "查看润色结果"],
+        "default_model_category": "text",
+    },
+}
+
 
 def slugify(value: str) -> str:
     return re.sub(r"^-+|-+$", "", re.sub(r"[^a-z0-9-]+", "-", value.strip().lower().replace("_", "-").replace(" ", "-")))
@@ -26,11 +69,13 @@ def main() -> None:
     parser.add_argument("--slug", help="App slug, defaults to slugified name")
     parser.add_argument("--description", required=True, help="One-line app description")
     parser.add_argument("--author", default="Your Name", help="Author name")
-    parser.add_argument("--category", default="小游戏", help="Category label")
+    parser.add_argument("--category", help="Category label")
+    parser.add_argument("--template", choices=sorted(TEMPLATES.keys()), default="orbit-tap", help="Starter template")
     args = parser.parse_args()
 
     skill_dir = Path(__file__).resolve().parents[1]
-    template_dir = skill_dir / "assets" / "starter-mini-game"
+    template = TEMPLATES[args.template]
+    template_dir = skill_dir / "assets" / template["dir"]
     manifest_template_path = skill_dir / "assets" / "manifest.example.json"
     readme_template_path = skill_dir / "assets" / "README.template.md"
 
@@ -47,11 +92,14 @@ def main() -> None:
     assets_dir.mkdir(parents=True, exist_ok=True)
 
     replacements = {
-        "Orbit Tap": args.name,
-        "点击移动中的星球，45 秒内拿到最高分。": args.description,
+        "__APP_NAME__": args.name,
+        "__APP_DESCRIPTION__": args.description,
+        "__APP_SLUG__": slug,
     }
 
-    replace_in_file(app_dir / "index.html", replacements)
+    for path in app_dir.rglob("*"):
+        if path.is_file() and path.suffix.lower() in {".html", ".css", ".js", ".json", ".md"}:
+            replace_in_file(path, replacements)
 
     manifest = json.loads(manifest_template_path.read_text(encoding="utf-8"))
     manifest.update({
@@ -59,7 +107,7 @@ def main() -> None:
         "slug": slug,
         "name": args.name,
         "description": args.description,
-        "category": args.category,
+        "category": args.category or template["default_category"],
         "author": {
             "name": args.author,
             "url": "",
@@ -71,11 +119,11 @@ def main() -> None:
         "thumbnail": "",
         "icon": "",
         "screenshots": [],
-        "features": ["轻量、即开即玩的静态小游戏"],
-        "tags": ["Game", "HTML5", "Starter"],
-        "techStack": ["HTML", "CSS", "JavaScript"],
-        "usageSteps": ["打开应用", "点击开始", "完成一局游戏"],
-        "modelCategory": "none",
+        "features": template["default_features"],
+        "tags": template["default_tags"],
+        "techStack": template["default_stack"],
+        "usageSteps": template["default_steps"],
+        "modelCategory": template["default_model_category"],
     })
 
     (out_dir / "manifest.json").write_text(
@@ -86,10 +134,12 @@ def main() -> None:
     readme = readme_template_path.read_text(encoding="utf-8")
     readme = readme.replace("{{APP_NAME}}", args.name)
     readme = readme.replace("{{ONE_LINE_DESCRIPTION}}", args.description)
+    readme = readme.replace("{{TEMPLATE_NAME}}", args.template)
     (out_dir / "README.md").write_text(readme, encoding="utf-8")
 
     print(f"Scaffolded project: {out_dir}")
     print(f"Package slug: {slug}")
+    print(f"Starter template: {args.template}")
     print("Next step: build or customize the app under app/, then package it with build_nima_package.py")
 
 
