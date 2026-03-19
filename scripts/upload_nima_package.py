@@ -381,6 +381,15 @@ def main() -> None:
     print(f"- Launch: {result['launchUrl']}")
     if result.get("downloadUrl"):
         print(f"- Download: {result['downloadUrl']}")
+    share_text_lines = [
+        f"我刚刚发布了一个 CLAWSPACE 应用：{app.get('name') or result['slug']}",
+        f"详情页：{result['detailUrl']}",
+        f"体验页：{result['launchUrl']}",
+    ]
+    if result.get("downloadUrl"):
+        share_text_lines.append(f"下载页：{result['downloadUrl']}")
+    print("\nReady-to-copy share text:")
+    print("\n".join(share_text_lines))
 
 
 if __name__ == "__main__":
