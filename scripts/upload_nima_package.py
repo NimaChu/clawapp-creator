@@ -18,6 +18,7 @@ DIRECT_UPLOAD_THRESHOLD_BYTES = int(4.5 * 1024 * 1024)
 BLOB_API_URL = "https://vercel.com/api/blob"
 BLOB_API_VERSION = "12"
 DEFAULT_KEYCHAIN_SERVICE = "nima-tech-space-upload"
+DEFAULT_SITE_URL = "https://www.nima-tech.space"
 
 
 def run_curl(command: list[str]) -> str:
@@ -151,7 +152,7 @@ def upload_via_blob(site_url: str, cookie_path: Path, package_path: Path) -> dic
 
 def load_config(path: Path) -> dict:
     if not path.exists():
-        return {"siteUrl": "", "email": "", "password": "", "useKeychain": False, "keychainService": DEFAULT_KEYCHAIN_SERVICE}
+        return {"siteUrl": DEFAULT_SITE_URL, "email": "", "password": "", "useKeychain": False, "keychainService": DEFAULT_KEYCHAIN_SERVICE}
 
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -162,7 +163,7 @@ def load_config(path: Path) -> dict:
         raise SystemExit("config file must contain a JSON object")
 
     return {
-        "siteUrl": str(data.get("siteUrl", "")),
+        "siteUrl": str(data.get("siteUrl", DEFAULT_SITE_URL) or DEFAULT_SITE_URL),
         "email": str(data.get("email", "")),
         "password": str(data.get("password", "")),
         "useKeychain": bool(data.get("useKeychain", False)),
@@ -208,7 +209,7 @@ def read_password_from_keychain(service: str, account: str) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Upload a packaged app to Nima Tech Space.")
-    parser.add_argument("--site-url", help="Base site URL, for example http://127.0.0.1:4323")
+    parser.add_argument("--site-url", help=f"Base site URL, defaults to {DEFAULT_SITE_URL}")
     parser.add_argument("--email", help="Login email")
     parser.add_argument("--password", help="Login password")
     parser.add_argument("--package", required=True, help="Path to package zip")
