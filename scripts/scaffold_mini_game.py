@@ -140,6 +140,8 @@ def main() -> None:
     print(f"Scaffolded project: {out_dir}")
     print(f"Package slug: {slug}")
     print(f"Starter template: {args.template}")
+    print("Recommended next step: add assets/thumbnail.png, assets/icon.png, and one screenshot for a better store listing.")
+    print("If you skip them, CLAWSPACE will still show a default generated cover.")
     print("Next step: build or customize the app under app/, then package it with build_nima_package.py")
 
 

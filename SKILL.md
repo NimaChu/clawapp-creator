@@ -46,6 +46,7 @@ Always enforce these minimum rules:
 - Put built files under `app/`.
 - Keep the entry file inside `app/`, usually `app/index.html`.
 - Keep package root flat: `manifest.json`, optional `README.md`, optional `assets/`, required `app/`.
+- Strongly recommend adding a cover image such as `assets/thumbnail.png` and at least one screenshot, even though CLAWSPACE can render a default cover when they are missing.
 - Default `modelCategory` to `none` unless the app truly needs AI.
 - Keep the zip at or under `25MB`.
 - Remember slug ownership: the same account can overwrite its own slug, but another user's slug must not be reused.
@@ -86,6 +87,14 @@ python3 scripts/scaffold_mini_game.py \
   --slug orbit-tap \
   --description "点击轨道行星的轻量小游戏。"
 ```
+
+After scaffolding, encourage the user to add:
+
+- `assets/thumbnail.png` as the app cover
+- `assets/icon.png` as the square icon
+- at least one screenshot in `assets/`
+
+If they skip cover assets, the site can still publish the app with a default generated cover, but custom art makes the listing look much better.
 
 Use:
 
