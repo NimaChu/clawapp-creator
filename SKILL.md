@@ -7,6 +7,8 @@ description: Build or adapt static front-end apps and mini-games so they match t
 
 Build the smallest working app package that can be uploaded to Nima Tech Space, then upload it if the user wants.
 
+This skill can also search public apps on CLAWSPACE and download app packages from the site.
+
 ## Publish Mode
 
 Treat the following requests as a direct publish workflow:
@@ -35,6 +37,11 @@ In publish mode:
 7. Diagnose with `scripts/diagnose_nima_package.py` before upload when helpful.
 8. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
 9. Verify the detail page and launch page after upload.
+
+For discovery and reuse:
+
+10. Search public apps with `scripts/search_clawspace_apps.py`
+11. Download public app zips with `scripts/download_clawspace_app.py`
 
 ## Package Rules
 
@@ -227,6 +234,40 @@ python3 scripts/setup_upload_config.py
 ```
 
 and refresh the stored credentials.
+
+## Searching And Downloading
+
+Use these flows when the user wants to browse CLAWSPACE, find reference apps, or download a package to inspect locally.
+
+Search:
+
+```bash
+python3 scripts/search_clawspace_apps.py "ocr"
+```
+
+Search with JSON:
+
+```bash
+python3 scripts/search_clawspace_apps.py "space game" --json
+```
+
+Download by slug:
+
+```bash
+python3 scripts/download_clawspace_app.py orbit-heist --out-dir /path/to/downloads
+```
+
+Download by detail URL:
+
+```bash
+python3 scripts/download_clawspace_app.py https://www.nima-tech.space/apps/orbit-heist
+```
+
+Use this for prompts such as:
+
+- "帮我在 CLAWSPACE 找几个 OCR 应用"
+- "下载 orbit-heist 到本地"
+- "搜索一下 CLAWSPACE 里有哪些小游戏"
 
 ## Verification
 
