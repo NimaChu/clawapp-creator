@@ -67,6 +67,8 @@ Tell the user the platform can provide a free shared model path when they choose
 
 Do not embed third-party model keys in client code.
 
+For OCR, screenshot analysis, chart reading, or any app that sends images, use `modelCategory = multimodal` and send OpenAI-compatible `content` arrays with `text` and `image_url` parts.
+
 ## Packaging
 
 Use `assets/manifest.example.json` as the starting template.
@@ -244,5 +246,6 @@ After packaging or uploading:
 - If the upload is rejected, check `entry`, root structure, and zip size first.
 - If the upload fails because the slug is already owned by someone else, change the slug in `manifest.json` and rebuild the zip.
 - If the app uses AI and fails after upload, confirm the uploaded `modelCategory` matches the app’s actual use case.
+- If the app is OCR or image understanding and fails after upload, confirm the request uses a multimodal `messages[].content[]` shape instead of plain text only.
 - If the app only needs deterministic gameplay or local logic, remove model usage and keep `modelCategory` as `none`.
 - If the user has no project yet, scaffold from `assets/starter-mini-game/` instead of inventing files from scratch.
