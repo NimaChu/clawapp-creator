@@ -26,6 +26,13 @@ In publish mode:
 5. upload it
 6. return the final links and a ready-to-share summary
 
+For a first-time uploader with no saved credentials, start by offering two clear paths:
+
+- "我可以直接帮你注册 CLAWSPACE 账号并保存上传配置"
+- "如果你想自己操作，也可以先去 https://www.nima-tech.space/register 注册"
+
+Prefer asking this before you attempt upload-related commands.
+
 ## Workflow
 
 1. Confirm the app can be shipped as a static front-end.
@@ -238,6 +245,12 @@ Before uploading, check whether the slug is available:
 If the package is too large for a direct Vercel function upload, use the site's Blob client-upload flow instead of failing early.
 
 Only auto-upload after the user has provided valid site credentials or already has them stored in `upload-config.json`. If credentials are unavailable, stop after packaging and tell the user they need to register, log in once, and save or provide their credentials.
+
+For first-time users with no upload config, prefer this decision order:
+
+1. offer to register the account directly with `scripts/register_clawspace_account.py`
+2. if they do not want that, give them the website registration link: `https://www.nima-tech.space/register`
+3. after they finish website registration, run `scripts/setup_upload_config.py`
 
 If login fails, tell the user to rerun:
 
