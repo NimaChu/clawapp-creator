@@ -85,6 +85,11 @@ It also warns about high-risk asset references like root-absolute `/assets/...` 
 
 ## Uploading
 
+Production site:
+
+- Website: `https://www.nima-tech.space`
+- Base API URL: `https://www.nima-tech.space`
+
 Use `upload-config.json` in the skill folder as the default reusable credential file. Ask the user once, then store:
 
 - `siteUrl`
@@ -107,7 +112,7 @@ Or in non-interactive mode:
 
 ```bash
 python3 scripts/setup_upload_config.py \
-  --site-url http://127.0.0.1:4323 \
+  --site-url https://www.nima-tech.space \
   --email user@example.com \
   --password 'password' \
   --password-store keychain \
@@ -127,7 +132,7 @@ Use:
 python3 scripts/upload_nima_package.py \
   --package /path/to/output.zip \
   --model-category none \
-  --site-url http://127.0.0.1:4323 \
+  --site-url https://www.nima-tech.space \
   --email user@example.com \
   --password 'password' \
   --save-config
