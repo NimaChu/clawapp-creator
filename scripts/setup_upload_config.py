@@ -6,13 +6,29 @@ import getpass
 import json
 import os
 import platform
+import re
 import subprocess
 import tempfile
+import urllib.parse
 from pathlib import Path
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[1] / "upload-config.json"
 DEFAULT_KEYCHAIN_SERVICE = "nima-tech-space-upload"
 DEFAULT_SITE_URL = "https://www.nima-tech.space"
+
+
+def validate_site_url(value: str) -> str:
+    parsed = urllib.parse.urlparse(value.strip())
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("Site URL must start with http:// or https:// and include a valid host.")
+    return value.rstrip("/")
+
+
+def validate_email(value: str) -> str:
+    email = value.strip()
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        raise ValueError("Email must look like name@example.com.")
+    return email
 
 
 def load_config(path: Path) -> dict:
@@ -126,6 +142,16 @@ def prompt_value(label: str, current: str, secret: bool = False) -> str:
     return value or current
 
 
+def prompt_validated(label: str, current: str, validator, example: str, secret: bool = False) -> str:
+    while True:
+        shown_label = f"{label} (example: {example})"
+        value = prompt_value(shown_label, current, secret=secret)
+        try:
+            return validator(value) if not secret else value
+        except ValueError as exc:
+            print(f"Invalid {label.lower()}: {exc}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Create or update the reusable upload config for Nima Tech Space.")
     parser.add_argument("--config", default=str(DEFAULT_CONFIG_PATH), help="Path to upload-config.json")
@@ -147,8 +173,8 @@ def main() -> None:
     password_store = args.password_store or ("keychain" if existing.get("useKeychain") else "config")
 
     if not args.non_interactive:
-        site_url = prompt_value("Site URL", site_url)
-        email = prompt_value("Email", email)
+        site_url = prompt_validated("Site URL", site_url, validate_site_url, DEFAULT_SITE_URL)
+        email = prompt_validated("Email", email, validate_email, "you@example.com")
         password = prompt_value("Password", password, secret=True)
         if supports_keychain():
             current = password_store
@@ -158,6 +184,11 @@ def main() -> None:
 
     if not site_url or not email or not password:
         raise SystemExit("missing required values: siteUrl, email, and password are all required")
+    try:
+        site_url = validate_site_url(site_url)
+        email = validate_email(email)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
 
     if password_store not in {"config", "keychain", "both"}:
         raise SystemExit("password store must be one of: config, keychain, both")
@@ -165,7 +196,12 @@ def main() -> None:
     if password_store in {"keychain", "both"} and not supports_keychain():
         raise SystemExit("macOS Keychain storage is only available on macOS")
 
-    verify_login(site_url, email, password)
+    try:
+        verify_login(site_url, email, password)
+    except SystemExit as exc:
+        raise SystemExit(
+            f"{exc}\nCredential verification failed. Please re-run this command and check the site URL, email, and password."
+        ) from exc
     if password_store in {"keychain", "both"}:
         save_password_to_keychain(keychain_service, email, password)
 

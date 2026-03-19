@@ -85,9 +85,16 @@ def scan_for_risky_asset_paths(app_dir: Path) -> None:
 
         relative_path = path.relative_to(app_dir).as_posix()
         if remote_url_pattern.search(content):
-            warn(f"{relative_path} contains http/https resource references; prefer self-contained or relative assets where possible")
+            warn(
+                f"{relative_path} contains http/https resource references. "
+                "These external files may fail after upload or create unstable runtime dependencies. "
+                "Prefer bundling the asset into app/ or using a relative path."
+            )
         if absolute_path_pattern.search(content):
-            warn(f"{relative_path} contains root-absolute asset paths like /assets/... which may break after upload")
+            warn(
+                f"{relative_path} contains root-absolute asset paths like /assets/... which may break after upload. "
+                "Prefer relative paths such as ./assets/... inside the packaged app."
+            )
 
 
 def main() -> None:
@@ -137,6 +144,7 @@ def main() -> None:
 
     print(f"Package built: {out_path}")
     print(f"Size: {size} bytes")
+    print("Checklist: manifest.json present, app/ present, entry verified, size verified, risky asset paths scanned.")
 
 
 if __name__ == "__main__":

@@ -21,6 +21,10 @@ DEFAULT_KEYCHAIN_SERVICE = "nima-tech-space-upload"
 DEFAULT_SITE_URL = "https://www.nima-tech.space"
 
 
+def fail(message: str) -> None:
+    raise SystemExit(message)
+
+
 def run_curl(command: list[str]) -> str:
     result = subprocess.run(command, check=False, capture_output=True, text=True)
     if result.returncode != 0:
@@ -239,8 +243,12 @@ def main() -> None:
     password = (args.password or config_password or keychain_password or "").strip()
 
     if not site_url or not email or not password:
-        raise SystemExit(
-            f"missing credentials: provide --site-url/--email/--password or fill {config_path}"
+        fail(
+            "Missing upload credentials.\n"
+            f"- Current config file: {config_path}\n"
+            f"- Expected fields: siteUrl, email, password (or Keychain password)\n"
+            "- Quick fix: run `python3 scripts/setup_upload_config.py`\n"
+            f"- Production site: {DEFAULT_SITE_URL}"
         )
 
     base_url = site_url.rstrip("/")
@@ -262,7 +270,10 @@ def main() -> None:
             f"{base_url}/api/auth/login",
         ], "login failed")
         if not login_payload.get("success"):
-            raise SystemExit(login_payload.get("error") or "login failed")
+            fail(
+                f"{login_payload.get('error') or 'login failed'}\n"
+                "Please check your saved credentials or run `python3 scripts/setup_upload_config.py` again."
+            )
 
         slug = load_manifest_slug_from_zip(package_path)
         slug_check = check_slug(base_url, cookie_path, slug)
@@ -326,14 +337,20 @@ def main() -> None:
         save_config(config_path, base_url, email, password)
 
     app = upload_payload["app"]
-    print(json.dumps({
+    result = {
         "success": True,
         "slug": app.get("slug"),
         "detailUrl": f"{base_url}/apps/{app.get('slug')}",
         "launchUrl": f"{base_url}{app.get('launchUrl', '')}",
         "downloadUrl": f"{base_url}{app.get('downloadUrl', '')}",
         "overwritten": upload_payload.get("overwritten", False),
-    }, ensure_ascii=False, indent=2))
+    }
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    print("\nUpload complete.")
+    print(f"App detail page: {result['detailUrl']}")
+    print(f"App launch page: {result['launchUrl']}")
+    if result.get("downloadUrl"):
+        print(f"App download link: {result['downloadUrl']}")
 
 
 if __name__ == "__main__":

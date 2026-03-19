@@ -120,6 +120,12 @@ python3 scripts/setup_upload_config.py \
 ```
 
 This setup script verifies the credentials by calling the real login endpoint before saving them.
+It now validates:
+
+- site URL format, with a real example
+- email format
+- login credentials before saving
+
 Supported password stores are:
 
 - `config`: store the password in `upload-config.json`
@@ -149,6 +155,7 @@ python3 scripts/upload_nima_package.py \
 Use `none` unless the app truly needs the platform model.
 
 The upload script reads missing values from `upload-config.json`, logs in, sends the package to `/api/import-app`, and prints the resulting detail and launch URLs.
+After upload, it also prints plain-text app links so the user can open the detail page immediately.
 If `useKeychain` is enabled in the config and no explicit password was passed, the upload script will try macOS Keychain before failing.
 
 Before uploading, check whether the slug is available:
@@ -160,6 +167,14 @@ Before uploading, check whether the slug is available:
 If the package is too large for a direct Vercel function upload, use the site's Blob client-upload flow instead of failing early.
 
 Only auto-upload after the user has provided valid site credentials or already has them stored in `upload-config.json`. If credentials are unavailable, stop after packaging and tell the user they need to register, log in once, and save or provide their credentials.
+
+If login fails, tell the user to rerun:
+
+```bash
+python3 scripts/setup_upload_config.py
+```
+
+and refresh the stored credentials.
 
 ## Verification
 
@@ -173,6 +188,8 @@ After packaging or uploading:
 ## Common Fixes
 
 - If assets do not load after upload, switch the app build to relative asset paths.
+- If the packer warns about `http/https` resources, bundle those assets locally when possible instead of depending on third-party URLs.
+- If the packer warns about `/assets/...` paths, rewrite them to relative paths such as `./assets/...`.
 - If the upload is rejected, check `entry`, root structure, and zip size first.
 - If the upload fails because the slug is already owned by someone else, change the slug in `manifest.json` and rebuild the zip.
 - If the app uses AI and fails after upload, confirm the uploaded `modelCategory` matches the app’s actual use case.
