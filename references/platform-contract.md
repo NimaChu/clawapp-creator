@@ -1,5 +1,10 @@
 # Nima Tech Space Platform Contract
 
+## 0. Production site
+
+- Public website: `https://www.nima-tech.space`
+- API base URL: `https://www.nima-tech.space`
+
 ## 1. Supported app type
 
 - Only static front-end apps and mini-games.
