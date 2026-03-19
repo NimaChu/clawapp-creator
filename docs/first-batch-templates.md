@@ -1,0 +1,142 @@
+# First Batch Template Pack
+
+These are the first starter templates designed for CLAWSPACE creators and OpenClaw users.
+
+## Design goals
+
+- fast to scaffold
+- easy to customize
+- easy to package and upload
+- small enough to stay within the CLAWSPACE static-app model
+- clear fit for either `none` or `text` model categories
+
+## Template lineup
+
+### 1. `orbit-tap`
+
+Type:
+
+- score-chasing mini-game
+
+Best for:
+
+- first-time creators
+- visual remix projects
+- brand mini-games
+
+Model category:
+
+- `none`
+
+Why it works:
+
+- tiny surface area
+- instantly playable
+- easy to reskin
+
+### 2. `memory-flip`
+
+Type:
+
+- puzzle mini-game
+
+Best for:
+
+- themed card games
+- educational matching games
+- event mini-games
+
+Model category:
+
+- `none`
+
+Why it works:
+
+- familiar gameplay
+- easy to reskin with new images or words
+- good for low-code creativity
+
+### 3. `focus-timer`
+
+Type:
+
+- lightweight utility app
+
+Best for:
+
+- productivity tools
+- creator utilities
+- personal dashboards
+
+Model category:
+
+- `none`
+
+Why it works:
+
+- useful beyond gaming
+- simple state management
+- easy to extend with local persistence or polish
+
+### 4. `ai-rewriter`
+
+Type:
+
+- platform-model text app
+
+Best for:
+
+- writing helpers
+- idea generation
+- dialogue polishing
+
+Model category:
+
+- `text`
+
+Why it works:
+
+- directly demonstrates CLAWSPACE model integration
+- helps creators understand the platform LLM path
+- easy to adapt into multiple AI text products
+
+## Recommended prompts for OpenClaw
+
+- "帮我用 orbit-tap 模板做一个可上传到 CLAWSPACE 的小游戏。"
+- "帮我用 memory-flip 模板做一个校园主题翻牌游戏。"
+- "帮我把 focus-timer 模板改成一个番茄钟工具并发布。"
+- "帮我用 ai-rewriter 模板做一个文案润色应用，并接入平台模型。"
+
+## Scaffold examples
+
+```bash
+python3 scripts/scaffold_mini_game.py \
+  --template orbit-tap \
+  --out /path/to/orbit-tap \
+  --name "Orbit Tap" \
+  --description "点击移动中的星球，45 秒内拿到最高分。"
+```
+
+```bash
+python3 scripts/scaffold_mini_game.py \
+  --template memory-flip \
+  --out /path/to/memory-flip \
+  --name "Memory Flip" \
+  --description "翻开卡片配对，在最短时间内完成整局记忆挑战。"
+```
+
+```bash
+python3 scripts/scaffold_mini_game.py \
+  --template focus-timer \
+  --out /path/to/focus-timer \
+  --name "Focus Timer" \
+  --description "一个轻量专注计时器，帮助你完成一轮深度工作。"
+```
+
+```bash
+python3 scripts/scaffold_mini_game.py \
+  --template ai-rewriter \
+  --out /path/to/ai-rewriter \
+  --name "AI Rewriter" \
+  --description "输入一句草稿，生成更自然的表达版本。"
+```
