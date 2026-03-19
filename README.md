@@ -79,6 +79,11 @@ python3 scripts/register_clawspace_account.py
 
 This can create the account and save reusable upload credentials in one step.
 
+For first-time users, the recommended choice is:
+
+- let ClawApp Creator register the account and save the upload config for you
+- or open [https://www.nima-tech.space/register](https://www.nima-tech.space/register) and register manually first
+
 ### 4. Configure upload credentials for an existing account
 
 ```bash
