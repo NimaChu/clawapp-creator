@@ -158,8 +158,18 @@ Keep the original plaintext-password config flow available as a backup option fo
 For the first-time setup, prefer:
 
 ```bash
+python3 scripts/register_clawspace_account.py
+```
+
+for a brand-new user who does not have a CLAWSPACE account yet.
+
+Use:
+
+```bash
 python3 scripts/setup_upload_config.py
 ```
+
+for an existing user who already has an account and only needs to save or refresh credentials.
 
 Or in non-interactive mode:
 
@@ -184,6 +194,8 @@ Supported password stores are:
 - `config`: store the password in `upload-config.json`
 - `keychain`: store the password in macOS Keychain and keep config file password empty
 - `both`: store in both places
+
+The registration script can create a new website account and save the reusable upload config in one step. Prefer this when the user says they do not have a CLAWSPACE account yet.
 
 Use:
 
