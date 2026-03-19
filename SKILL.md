@@ -7,6 +7,23 @@ description: Build or adapt static front-end apps and mini-games so they match t
 
 Build the smallest working app package that can be uploaded to Nima Tech Space, then upload it if the user wants.
 
+## Publish Mode
+
+Treat the following requests as a direct publish workflow:
+
+- "帮我做一个可上传到 CLAWSPACE 的小游戏"
+- "把这个项目变成 CLAWSPACE 可发布应用"
+- "帮我直接发布这个应用"
+
+In publish mode:
+
+1. diagnose the project
+2. fix or scaffold the app
+3. package it
+4. verify slug ownership
+5. upload it
+6. return the final links and a ready-to-share summary
+
 ## Workflow
 
 1. Confirm the app can be shipped as a static front-end.
@@ -15,8 +32,9 @@ Build the smallest working app package that can be uploaded to Nima Tech Space, 
 4. Generate a compliant `manifest.json`, optional `README.md`, and `assets/`.
 5. If there is no project yet, scaffold one with `scripts/scaffold_mini_game.py`.
 6. Package everything into a zip with `scripts/build_nima_package.py`.
-7. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
-8. Verify the detail page and launch page after upload.
+7. Diagnose with `scripts/diagnose_nima_package.py` before upload when helpful.
+8. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
+9. Verify the detail page and launch page after upload.
 
 ## Package Rules
 
@@ -82,6 +100,22 @@ python3 scripts/build_nima_package.py \
 
 The script validates the structure, checks the required fields, checks the size limit, and builds the final zip.
 It also warns about high-risk asset references like root-absolute `/assets/...` paths or remote `http/https` URLs inside the packaged front-end.
+
+For project diagnosis, use:
+
+```bash
+python3 scripts/diagnose_nima_package.py \
+  --app-dir /path/to/app-or-dist \
+  --manifest /path/to/manifest.json
+```
+
+This checks:
+
+- resource paths
+- slug quality
+- manifest presence
+- likely external model key usage
+- whether `modelCategory` looks more suitable as `none`, `text`, `multimodal`, or `code`
 
 ## Uploading
 
@@ -158,6 +192,12 @@ The upload script reads missing values from `upload-config.json`, logs in, sends
 After upload, it also prints plain-text app links so the user can open the detail page immediately.
 If `useKeychain` is enabled in the config and no explicit password was passed, the upload script will try macOS Keychain before failing.
 
+During upload, report progress in stages:
+
+- current stage
+- what is already done
+- what comes next
+
 Before uploading, check whether the slug is available:
 
 - If it is new, upload normally.
@@ -184,6 +224,7 @@ After packaging or uploading:
 - If uploaded, open the detail page.
 - If uploaded, open the launch page.
 - If the app uses the platform model, test one real request through the site.
+- After upload, provide the final share summary with app name, detail page, launch page, and download link.
 
 ## Common Fixes
 
