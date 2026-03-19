@@ -12,11 +12,12 @@ from pathlib import Path
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[1] / "upload-config.json"
 DEFAULT_KEYCHAIN_SERVICE = "nima-tech-space-upload"
+DEFAULT_SITE_URL = "https://www.nima-tech.space"
 
 
 def load_config(path: Path) -> dict:
     if not path.exists():
-        return {"siteUrl": "", "email": "", "password": "", "useKeychain": False, "keychainService": DEFAULT_KEYCHAIN_SERVICE}
+        return {"siteUrl": DEFAULT_SITE_URL, "email": "", "password": "", "useKeychain": False, "keychainService": DEFAULT_KEYCHAIN_SERVICE}
 
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -27,7 +28,7 @@ def load_config(path: Path) -> dict:
         raise SystemExit("config file must contain a JSON object")
 
     return {
-        "siteUrl": str(data.get("siteUrl", "")),
+        "siteUrl": str(data.get("siteUrl", DEFAULT_SITE_URL) or DEFAULT_SITE_URL),
         "email": str(data.get("email", "")),
         "password": str(data.get("password", "")),
         "useKeychain": bool(data.get("useKeychain", False)),
@@ -128,7 +129,7 @@ def prompt_value(label: str, current: str, secret: bool = False) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Create or update the reusable upload config for Nima Tech Space.")
     parser.add_argument("--config", default=str(DEFAULT_CONFIG_PATH), help="Path to upload-config.json")
-    parser.add_argument("--site-url", help="Base site URL")
+    parser.add_argument("--site-url", help=f"Base site URL, defaults to {DEFAULT_SITE_URL}")
     parser.add_argument("--email", help="Login email")
     parser.add_argument("--password", help="Login password")
     parser.add_argument("--password-store", choices=["config", "keychain", "both"], help="Where to store the password after verification")
