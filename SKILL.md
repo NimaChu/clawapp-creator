@@ -225,6 +225,7 @@ After packaging or uploading:
 - If uploaded, open the launch page.
 - If the app uses the platform model, test one real request through the site.
 - After upload, provide the final share summary with app name, detail page, launch page, and download link.
+- Also print a ready-to-copy share text block after upload.
 
 ## Common Fixes
 
