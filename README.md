@@ -1,67 +1,67 @@
 # ClawApp Creator
 
-ClawApp Creator 是一个给 OpenClaw / Codex 使用的技能工程，用来把静态前端应用或小游戏整理成兼容 CLAWSPACE 的标准应用包，并在条件满足时自动上传到正式网站。
+ClawApp Creator is a skill project for OpenClaw / Codex. It helps turn static front-end apps and mini-games into CLAWSPACE-compatible app packages, then uploads them to the production site when the user wants to publish.
 
-它适合两类场景：
+It is designed for two common cases:
 
-- 从零生成一个可上传的小应用 / 小游戏
-- 把现有静态前端项目改造成平台可接受的 zip 包
+- Start a small app or mini-game from scratch
+- Adapt an existing static front-end project into a platform-ready zip package
 
-正式平台：
+Production platform:
 
 - Website: [https://www.nima-tech.space](https://www.nima-tech.space)
 - Skill on ClawHub: [https://clawhub.ai/NimaChu/clawapp-creator](https://clawhub.ai/NimaChu/clawapp-creator)
 
 ## First-Time Flow
 
-如果你是第一次使用，最推荐走这条顺序：
+For a first-time user, this is the smoothest path:
 
-1. 让 ClawApp Creator 直接帮你注册 CLAWSPACE 账号
-2. 自动保存上传配置
-3. 打包应用
-4. Dry-run 检查
-5. 一键上传并拿到详情页 / 体验页 / 下载页
+1. Let ClawApp Creator register a CLAWSPACE account for you
+2. Save reusable upload credentials
+3. Package the app
+4. Run a dry-run check
+5. Upload and receive the detail, launch, and download links
 
-如果你不想让技能代注册，也可以先自己去网页注册：
+If you prefer to register manually, you can do that first on the website:
 
 - [https://www.nima-tech.space/register](https://www.nima-tech.space/register)
 
 ## What It Does
 
-- 生成符合平台规范的 `manifest.json`
-- 生成或补齐 `README.md`
-- 校验应用包结构
-- 检查资源路径风险
-- 检查 slug 是否可用
-- 搜索 CLAWSPACE 上的公开应用
-- 从 CLAWSPACE 下载公开应用 zip
-- 支持 dry-run 预检查
-- 支持直接上传或大包 Blob 上传
-- 支持明文配置与 macOS Keychain 两种凭证保存方式
-- 支持 `none / text / multimodal / code` 四类模型接入判断
-- 支持 OCR / 图像分析类 starter
-- 上传完成后给出详情页、体验页、下载页和可复制分享文案
+- Generates a compliant `manifest.json`
+- Generates or fills in a `README.md`
+- Validates the package structure
+- Checks risky asset paths
+- Checks whether a slug is available
+- Searches public apps on CLAWSPACE
+- Downloads public CLAWSPACE app zip packages
+- Supports dry-run validation before upload
+- Supports direct uploads and large-package Blob uploads
+- Supports both plaintext config storage and macOS Keychain storage
+- Helps choose between `none / text / multimodal / code` model categories
+- Includes OCR / image-analysis starter support
+- Returns detail, launch, download, and share-ready links after upload
 
 ## Main Files
 
-- `SKILL.md`: 技能主说明
-- `scripts/scaffold_mini_game.py`: 生成小游戏骨架
-- `scripts/build_nima_package.py`: 构建平台 zip 包
-- `scripts/register_clawspace_account.py`: 注册新账号并保存上传配置
-- `scripts/setup_upload_config.py`: 初始化上传配置
-- `scripts/upload_nima_package.py`: 校验并上传应用包
-- `references/platform-contract.md`: 平台打包规范
-- `references/model-api.md`: 平台模型接口说明
+- `SKILL.md`: Main skill instructions
+- `scripts/scaffold_mini_game.py`: Generate a mini-game scaffold
+- `scripts/build_nima_package.py`: Build a platform zip package
+- `scripts/register_clawspace_account.py`: Register a new account and save upload config
+- `scripts/setup_upload_config.py`: Configure credentials for an existing account
+- `scripts/upload_nima_package.py`: Validate and upload a package
+- `references/platform-contract.md`: Packaging rules
+- `references/model-api.md`: Platform model API guide
 
 ## Quick Start
 
-### 1. Scaffold a new mini game
+### 1. Scaffold a new mini-game
 
 ```bash
 python3 scripts/scaffold_mini_game.py \
   --out /path/to/new-project \
   --name "Orbit Tap" \
-  --description "点击轨道行星的轻量小游戏。"
+  --description "A lightweight game about tapping planets on an orbit."
 ```
 
 ### 1b. Scaffold an OCR / multimodal app
@@ -70,8 +70,8 @@ python3 scripts/scaffold_mini_game.py \
 python3 scripts/scaffold_mini_game.py \
   --template ocr-tool \
   --out /path/to/ocr-tool \
-  --name "在线 OCR 工具" \
-  --description "上传图片并识别文字、表格或图像内容。"
+  --name "Online OCR Tool" \
+  --description "Upload an image and extract text, tables, or visual content."
 ```
 
 ### 2. Build a package
@@ -85,18 +85,18 @@ python3 scripts/build_nima_package.py \
   --assets-dir /path/to/assets
 ```
 
-### 3. Register a new CLAWSPACE account (optional but helpful for first-time users)
+### 3. Register a new CLAWSPACE account
 
 ```bash
 python3 scripts/register_clawspace_account.py
 ```
 
-This can create the account and save reusable upload credentials in one step.
+This creates the account and saves reusable upload credentials in one step.
 
-For first-time users, the recommended choice is:
+Recommended first-time options:
 
-- let ClawApp Creator register the account and save the upload config for you
-- or open [https://www.nima-tech.space/register](https://www.nima-tech.space/register) and register manually first
+- Let ClawApp Creator register the account and save the upload config for you
+- Or register manually first at [https://www.nima-tech.space/register](https://www.nima-tech.space/register)
 
 Non-interactive example:
 
@@ -116,9 +116,9 @@ python3 scripts/register_clawspace_account.py \
 python3 scripts/setup_upload_config.py
 ```
 
-On macOS you can also choose Keychain storage instead of keeping the password in plaintext config.
+On macOS you can choose Keychain storage instead of storing the password in plaintext config.
 
-The default production site is:
+Default production site:
 
 ```text
 https://www.nima-tech.space
@@ -156,11 +156,11 @@ python3 scripts/download_clawspace_app.py orbit-heist --out-dir /path/to/downloa
 
 These direct prompts work well in OpenClaw:
 
-- `帮我做一个可上传到 CLAWSPACE 的小游戏`
-- `把这个项目变成 CLAWSPACE 可发布应用`
-- `帮我直接发布这个应用`
+- `Help me make a mini-game that can be uploaded to CLAWSPACE`
+- `Turn this project into a publishable CLAWSPACE app`
+- `Help me publish this app directly`
 
-In publish mode, the skill should diagnose, package, verify slug ownership, upload, and return final links.
+In publish mode, the skill should diagnose, package, verify slug ownership, upload, and return the final links.
 
 ## Supported Templates
 
@@ -178,9 +178,9 @@ In publish mode, the skill should diagnose, package, verify slug ownership, uplo
 - Different accounts cannot overwrite each other's slug.
 - New users can register directly through `scripts/register_clawspace_account.py`.
 - Existing users should use `scripts/setup_upload_config.py` instead of registering again.
-- Public search and download use the production website at `https://www.nima-tech.space`.
+- Public search and download use the production site at `https://www.nima-tech.space`.
 - If ClawHub is rate limited, users can still install the skill from GitHub.
 
 ## Repository Role
 
-This repository is the source of the `clawapp-creator` skill and can also be installed into Codex skills directories for direct use.
+This repository is the source of the `clawapp-creator` skill and can also be installed directly into Codex skills directories.
