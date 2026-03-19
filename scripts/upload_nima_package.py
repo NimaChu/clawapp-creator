@@ -25,6 +25,18 @@ def fail(message: str) -> None:
     raise SystemExit(message)
 
 
+def stage(message: str) -> None:
+    print(f"[stage] {message}", file=sys.stderr)
+
+
+def done(message: str) -> None:
+    print(f"[done] {message}", file=sys.stderr)
+
+
+def next_step(message: str) -> None:
+    print(f"[next] {message}", file=sys.stderr)
+
+
 def run_curl(command: list[str]) -> str:
     result = subprocess.run(command, check=False, capture_output=True, text=True)
     if result.returncode != 0:
@@ -229,6 +241,8 @@ def main() -> None:
     package_path = Path(args.package).expanduser().resolve()
     if not package_path.is_file():
         raise SystemExit(f"package not found: {package_path}")
+    stage("Starting CLAWSPACE publish mode")
+    done(f"Package located: {package_path}")
 
     config_path = Path(args.config).expanduser().resolve()
     config = load_config(config_path)
@@ -256,6 +270,7 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         cookie_path = Path(temp_dir) / "cookies.txt"
 
+        stage("Verifying account credentials")
         login_payload = run_curl_json([
             "curl",
             "-sS",
@@ -274,9 +289,12 @@ def main() -> None:
                 f"{login_payload.get('error') or 'login failed'}\n"
                 "Please check your saved credentials or run `python3 scripts/setup_upload_config.py` again."
             )
+        done(f"Logged in as: {email}")
 
+        stage("Reading manifest and checking slug ownership")
         slug = load_manifest_slug_from_zip(package_path)
         slug_check = check_slug(base_url, cookie_path, slug)
+        done(summarize_slug_check(slug_check))
         if slug_check.get("exists") and not slug_check.get("canOverwrite"):
             owner_name = slug_check.get("ownerName") or "unknown user"
             raise SystemExit(
@@ -287,6 +305,7 @@ def main() -> None:
             print(f"Notice: '{slug}' already exists and will be overwritten by this account.", file=sys.stderr)
 
         if args.dry_run:
+            next_step("Dry run complete. If everything looks good, run the same command without --dry-run.")
             print(json.dumps({
                 "success": True,
                 "dryRun": True,
@@ -300,7 +319,10 @@ def main() -> None:
             return
 
         if package_path.stat().st_size > DIRECT_UPLOAD_THRESHOLD_BYTES:
+            stage("Uploading large package via Blob")
             blob_upload = upload_via_blob(base_url, cookie_path, package_path)
+            done("Blob upload finished")
+            stage("Finalizing import")
             upload_payload = run_curl_json([
                 "curl",
                 "-sS",
@@ -317,6 +339,7 @@ def main() -> None:
                 f"{base_url}/api/import-app",
             ], "upload finalize failed")
         else:
+            stage("Uploading package directly")
             upload_payload = run_curl_json([
                 "curl",
                 "-sS",
@@ -328,6 +351,7 @@ def main() -> None:
                 f"modelCategory={args.model_category}",
                 f"{base_url}/api/import-app",
             ], "upload failed")
+        done("Upload finished")
 
         if not upload_payload.get("success"):
             raise SystemExit(upload_payload.get("error") or "upload failed")
@@ -351,6 +375,12 @@ def main() -> None:
     print(f"App launch page: {result['launchUrl']}")
     if result.get("downloadUrl"):
         print(f"App download link: {result['downloadUrl']}")
+    print("\nShare summary:")
+    print(f"- App: {app.get('name') or result['slug']}")
+    print(f"- Detail: {result['detailUrl']}")
+    print(f"- Launch: {result['launchUrl']}")
+    if result.get("downloadUrl"):
+        print(f"- Download: {result['downloadUrl']}")
 
 
 if __name__ == "__main__":
