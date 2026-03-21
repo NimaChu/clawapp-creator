@@ -35,21 +35,22 @@ Prefer asking this before you attempt upload-related commands.
 
 ## Workflow
 
-1. Confirm the app can be shipped as a static front-end.
-2. Build or fix the app until it outputs a static bundle.
-3. Decide whether the app needs a model.
-4. Generate a compliant `manifest.json`, optional `README.md`, and `assets/`.
-5. If there is no project yet, scaffold one with `scripts/scaffold_mini_game.py`.
-6. Preview locally with `scripts/preview_clawspace_app.py` when the user wants a browser check before package or upload.
-7. Package everything into a zip with `scripts/build_nima_package.py`.
-8. Diagnose with `scripts/diagnose_nima_package.py` before upload when helpful.
-9. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
-10. Verify the detail page and launch page after upload.
+1. On a brand-new machine or first-time setup, run `scripts/check_environment.py` first when the user is unsure whether the skill is ready to use.
+2. Confirm the app can be shipped as a static front-end.
+3. Build or fix the app until it outputs a static bundle.
+4. Decide whether the app needs a model.
+5. Generate a compliant `manifest.json`, optional `README.md`, and `assets/`.
+6. If there is no project yet, scaffold one with `scripts/scaffold_mini_game.py`.
+7. Preview locally with `scripts/preview_clawspace_app.py` when the user wants a browser check before package or upload.
+8. Package everything into a zip with `scripts/build_nima_package.py`.
+9. Diagnose with `scripts/diagnose_nima_package.py` before upload when helpful.
+10. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
+11. Verify the detail page and launch page after upload.
 
 For discovery and reuse:
 
-11. Search public apps with `scripts/search_clawspace_apps.py`
-12. Download public app zips with `scripts/download_clawspace_app.py`
+12. Search public apps with `scripts/search_clawspace_apps.py`
+13. Download public app zips with `scripts/download_clawspace_app.py`
 
 ## Package Rules
 
@@ -153,6 +154,14 @@ This checks:
 - whether `modelCategory` looks more suitable as `none`, `text`, `multimodal`, or `code`
 
 ## Uploading
+
+Environment check:
+
+```bash
+python3 scripts/check_environment.py
+```
+
+Use this first on a new machine, or when the user is not sure whether Python, browser preview, network access, or Keychain support are ready.
 
 Production site:
 

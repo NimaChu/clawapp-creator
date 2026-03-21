@@ -12,6 +12,31 @@ Production platform:
 - Website: [https://www.nima-tech.space](https://www.nima-tech.space)
 - Skill on ClawHub: [https://clawhub.ai/NimaChu/clawapp-creator](https://clawhub.ai/NimaChu/clawapp-creator)
 
+## Requirements
+
+ClawApp Creator is close to out-of-the-box for most users, because it does not require extra Python packages.
+
+You only need:
+
+- Python `3.9+`
+- network access to [https://www.nima-tech.space](https://www.nima-tech.space)
+- a browser for local preview flows
+- macOS Keychain only if you want the recommended password storage mode
+
+Recommended first check:
+
+```bash
+python3 scripts/check_environment.py
+```
+
+This verifies:
+
+- Python version
+- network access to CLAWSPACE
+- browser availability
+- Keychain support on macOS
+- required skill files
+
 ## First-Time Flow
 
 For a first-time user, this is the smoothest path:
@@ -46,6 +71,7 @@ If you prefer to register manually, you can do that first on the website:
 ## Main Files
 
 - `SKILL.md`: Main skill instructions
+- `scripts/check_environment.py`: Check whether the machine is ready to use the skill
 - `scripts/scaffold_mini_game.py`: Generate a mini-game scaffold
 - `scripts/build_nima_package.py`: Build a platform zip package
 - `scripts/preview_clawspace_app.py`: Start a local preview server for a CLAWSPACE app
@@ -56,6 +82,14 @@ If you prefer to register manually, you can do that first on the website:
 - `references/model-api.md`: Platform model API guide
 
 ## Quick Start
+
+### 0. Check your environment
+
+```bash
+python3 scripts/check_environment.py
+```
+
+If this reports warnings, fix those first. It is the fastest way to confirm whether the skill is ready to run on a new machine.
 
 ### 1. Scaffold a new mini-game
 
@@ -183,6 +217,7 @@ In publish mode, the skill should diagnose, package, verify slug ownership, uplo
 ## Notes
 
 - The target platform currently supports static front-end apps and mini-games.
+- No extra Python packages are required; the scripts use the standard library.
 - The final zip should stay within `25MB`.
 - The same account can overwrite its own slug.
 - Different accounts cannot overwrite each other's slug.
@@ -191,6 +226,7 @@ In publish mode, the skill should diagnose, package, verify slug ownership, uplo
 - Public search and download use the production site at `https://www.nima-tech.space`.
 - Local preview reads `manifest.json` and serves the project root directly.
 - If ClawHub is rate limited, users can still install the skill from GitHub.
+- macOS users get the smoothest credential flow because Keychain storage is supported directly.
 
 ## Repository Role
 
