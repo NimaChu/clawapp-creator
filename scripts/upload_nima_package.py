@@ -48,12 +48,64 @@ def run_curl(command: list[str]) -> str:
     return result.stdout
 
 
+def run_curl_with_metadata(command: list[str]) -> tuple[str, int, str]:
+    with tempfile.TemporaryDirectory() as temp_dir:
+        header_path = Path(temp_dir) / "headers.txt"
+        body_path = Path(temp_dir) / "body.txt"
+        result = subprocess.run(
+            [
+                *command,
+                "-D",
+                str(header_path),
+                "-o",
+                str(body_path),
+                "-w",
+                "\n%{http_code}",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise SystemExit(result.stderr.strip() or "curl request failed")
+
+        status_line = (result.stdout or "").strip().splitlines()
+        status_code = 0
+        if status_line:
+            try:
+                status_code = int(status_line[-1])
+            except ValueError:
+                status_code = 0
+
+        body = body_path.read_text(encoding="utf-8", errors="replace") if body_path.exists() else ""
+        headers = header_path.read_text(encoding="utf-8", errors="replace") if header_path.exists() else ""
+        return body, status_code, headers
+
+
+def extract_content_type(headers: str) -> str:
+    for line in headers.splitlines():
+        if line.lower().startswith("content-type:"):
+            return line.split(":", 1)[1].strip()
+    return ""
+
+
+def summarize_non_json_response(body: str, status_code: int, headers: str) -> str:
+    content_type = extract_content_type(headers) or "unknown"
+    snippet = re.sub(r"\s+", " ", body).strip()[:280] or "empty body"
+    hint = ""
+    if "text/html" in content_type or body.lstrip().startswith("<!DOCTYPE") or body.lstrip().startswith("<html"):
+        hint = " This usually means the server returned an HTML error page (for example a timeout, proxy error, or platform crash) instead of JSON."
+    elif status_code >= 500:
+        hint = " This usually means the import finalize step failed server-side before a JSON response was produced."
+    return f"HTTP {status_code or 'unknown'}, content-type: {content_type}. Response snippet: {snippet}.{hint}"
+
+
 def run_curl_json(command: list[str], error_message: str) -> dict:
-    output = run_curl(command)
+    output, status_code, headers = run_curl_with_metadata(command)
     try:
         payload = json.loads(output)
     except json.JSONDecodeError as exc:
-        raise SystemExit(f"{error_message}: {output.strip() or 'invalid JSON response'}") from exc
+        raise SystemExit(f"{error_message}: {summarize_non_json_response(output, status_code, headers)}") from exc
 
     if not isinstance(payload, dict):
         raise SystemExit(f"{error_message}: response must be a JSON object")

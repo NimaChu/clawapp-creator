@@ -212,6 +212,14 @@ python3 scripts/upload_nima_package.py \
   --model-category none
 ```
 
+If upload reaches the Blob step but then fails with a non-JSON error, the script now prints:
+
+- HTTP status
+- response content type
+- a short response snippet
+
+That usually means the CLAWSPACE import finalize step returned an HTML error page (for example a timeout or platform error), not that your account credentials were wrong.
+
 ### 7. Search public apps on CLAWSPACE
 
 ```bash
