@@ -65,6 +65,7 @@ Always enforce these minimum rules:
 - Keep package root flat: `manifest.json`, optional `README.md`, optional `assets/`, required `app/`.
 - Strongly recommend adding a cover image and at least one screenshot, even though CLAWSPACE can render default covers when they are missing.
 - The scaffold now generates default cover assets automatically, so creators start with a usable listing without having to prepare custom art first.
+- The scaffold keeps starter packages lighter by generating `thumbnail.png` and `icon.png` without automatically duplicating them into `screenshots`.
 - Default `modelCategory` to `none` unless the app truly needs AI.
 - Keep the zip at or under `25MB`.
 - Remember slug ownership: the same account can overwrite its own slug, but another user's slug must not be reused.

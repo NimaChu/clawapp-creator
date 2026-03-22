@@ -231,7 +231,7 @@ def write_png(path: Path, width: int, height: int, pixel_at) -> None:
 
 
 def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], motif: str) -> None:
-    width, height = 1280, 720
+    width, height = 1024, 576
     background = palette["background"]
     primary = palette["primary"]
     secondary = palette["secondary"]
@@ -453,7 +453,7 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], m
 
 
 def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif: str) -> None:
-    size = 512
+    size = 384
     background = palette["background"]
     primary = palette["primary"]
     secondary = palette["secondary"]
@@ -693,7 +693,7 @@ def main() -> None:
         },
         "thumbnail": thumbnail_asset,
         "icon": icon_asset,
-        "screenshots": [thumbnail_asset],
+        "screenshots": [],
         "features": template["default_features"],
         "tags": template["default_tags"],
         "techStack": template["default_stack"],

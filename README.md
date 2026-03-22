@@ -113,6 +113,7 @@ Every scaffold now includes default cover assets:
 - `assets/icon.png`
 
 You can keep the generated assets or replace them later with your own PNG, JPG, WebP, or SVG cover art.
+The scaffold no longer duplicates the same image into `screenshots` by default, which keeps starter packages lighter.
 For mobile shells such as WeChat Mini Program, PNG/JPG/WebP is recommended. If creators only provide SVG or skip custom art entirely, CLAWSPACE can fall back to default mobile-safe PNG covers.
 
 ### 1b. Scaffold an OCR / multimodal app
