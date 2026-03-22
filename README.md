@@ -141,6 +141,12 @@ python3 scripts/build_nima_package.py \
   --assets-dir /path/to/assets
 ```
 
+During build, ClawApp Creator now also checks cover and screenshot assets for:
+
+- zero-byte files
+- oversized icon / thumbnail / screenshot images
+- SVG-only thumbnail setups that may need a mobile fallback
+
 ### 2b. Preview locally before packaging
 
 ```bash

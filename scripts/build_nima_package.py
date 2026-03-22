@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import platform
 import re
+import subprocess
 import sys
 import zipfile
 from pathlib import Path
@@ -11,6 +13,13 @@ from pathlib import Path
 MAX_PACKAGE_BYTES = 25 * 1024 * 1024
 ALLOWED_MODEL_CATEGORIES = {"none", "text", "multimodal", "code"}
 TEXT_SCAN_EXTENSIONS = {".html", ".css", ".js", ".mjs", ".json", ".svg"}
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+ICON_MAX_BYTES = 1 * 1024 * 1024
+THUMBNAIL_MAX_BYTES = 2 * 1024 * 1024
+SCREENSHOT_MAX_BYTES = 3 * 1024 * 1024
+ICON_MAX_DIMENSION = 1024
+THUMBNAIL_MAX_DIMENSION = 1600
+SCREENSHOT_MAX_DIMENSION = 2200
 
 
 def fail(message: str) -> None:
@@ -20,6 +29,27 @@ def fail(message: str) -> None:
 
 def warn(message: str) -> None:
     print(f"WARNING: {message}", file=sys.stderr)
+
+
+def get_image_dimensions(path: Path) -> tuple[int, int] | None:
+    if platform.system() != "Darwin" or path.suffix.lower() not in IMAGE_EXTENSIONS:
+        return None
+
+    result = subprocess.run(
+        ["sips", "-g", "pixelWidth", "-g", "pixelHeight", str(path)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return None
+
+    width_match = re.search(r"pixelWidth:\s*(\d+)", result.stdout)
+    height_match = re.search(r"pixelHeight:\s*(\d+)", result.stdout)
+    if not width_match or not height_match:
+        return None
+
+    return int(width_match.group(1)), int(height_match.group(1))
 
 
 def load_manifest(path: Path) -> dict:
@@ -60,6 +90,45 @@ def ensure_manifest(manifest: dict, app_dir: Path, assets_dir: Path | None) -> N
         for screenshot in manifest.get("screenshots", []):
             if screenshot and not (assets_dir / Path(screenshot).name).exists():
                 fail(f"screenshot not found in assets dir: {screenshot}")
+
+
+def inspect_assets_dir(assets_dir: Path | None) -> None:
+    if not assets_dir or not assets_dir.is_dir():
+        return
+
+    def inspect(candidate: Path, max_bytes: int, max_dimension: int) -> None:
+        size = candidate.stat().st_size
+        if size == 0:
+            fail(f"asset is empty (0 bytes): {candidate.name}")
+        if size > max_bytes:
+            warn(f"{candidate.name} is large ({size} bytes). Recommended <= {max_bytes} bytes.")
+        dimensions = get_image_dimensions(candidate)
+        if dimensions and max(dimensions) > max_dimension:
+            warn(
+                f"{candidate.name} is {dimensions[0]}x{dimensions[1]}. "
+                f"Recommended <= {max_dimension}px on the longest side."
+            )
+
+    for name in ["icon.png", "icon.jpg", "icon.jpeg", "icon.webp"]:
+        candidate = assets_dir / name
+        if candidate.is_file():
+            inspect(candidate, ICON_MAX_BYTES, ICON_MAX_DIMENSION)
+
+    for name in ["thumbnail.png", "thumbnail.jpg", "thumbnail.jpeg", "thumbnail.webp"]:
+        candidate = assets_dir / name
+        if candidate.is_file():
+            inspect(candidate, THUMBNAIL_MAX_BYTES, THUMBNAIL_MAX_DIMENSION)
+
+    for candidate in sorted(assets_dir.glob("screenshot*")):
+        if candidate.is_file():
+            inspect(candidate, SCREENSHOT_MAX_BYTES, SCREENSHOT_MAX_DIMENSION)
+
+    has_svg_thumbnail = (assets_dir / "thumbnail.svg").is_file()
+    has_bitmap_thumbnail = any((assets_dir / name).is_file() for name in ["thumbnail.png", "thumbnail.jpg", "thumbnail.jpeg", "thumbnail.webp"])
+    if has_svg_thumbnail and not has_bitmap_thumbnail:
+        warn(
+            "Only thumbnail.svg was found. Web can use it, but mobile shells may fall back to a default PNG cover."
+        )
 
 
 def add_tree(zf: zipfile.ZipFile, source_dir: Path, zip_prefix: str) -> None:
@@ -124,6 +193,7 @@ def main() -> None:
     manifest = load_manifest(manifest_path)
     ensure_manifest(manifest, app_dir, assets_dir)
     scan_for_risky_asset_paths(app_dir)
+    inspect_assets_dir(assets_dir)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     if out_path.exists():
@@ -144,7 +214,7 @@ def main() -> None:
 
     print(f"Package built: {out_path}")
     print(f"Size: {size} bytes")
-    print("Checklist: manifest.json present, app/ present, entry verified, size verified, risky asset paths scanned.")
+    print("Checklist: manifest.json present, app/ present, entry verified, size verified, risky asset paths scanned, asset sizes checked.")
 
 
 if __name__ == "__main__":
