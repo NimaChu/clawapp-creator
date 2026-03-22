@@ -36,21 +36,22 @@ Prefer asking this before you attempt upload-related commands.
 ## Workflow
 
 1. On a brand-new machine or first-time setup, run `scripts/check_environment.py` first when the user is unsure whether the skill is ready to use.
-2. Confirm the app can be shipped as a static front-end.
-3. Build or fix the app until it outputs a static bundle.
-4. Decide whether the app needs a model.
-5. Generate a compliant `manifest.json`, optional `README.md`, and `assets/`.
-6. If there is no project yet, scaffold one with `scripts/scaffold_mini_game.py`.
-7. Preview locally with `scripts/preview_clawspace_app.py` when the user wants a browser check before package or upload.
-8. Package everything into a zip with `scripts/build_nima_package.py`.
-9. Diagnose with `scripts/diagnose_nima_package.py` before upload when helpful.
-10. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
-11. Verify the detail page and launch page after upload.
+2. Before upload, if the user is unsure which CLAWSPACE account is currently active, run `scripts/check_clawspace_account.py`.
+3. Confirm the app can be shipped as a static front-end.
+4. Build or fix the app until it outputs a static bundle.
+5. Decide whether the app needs a model.
+6. Generate a compliant `manifest.json`, optional `README.md`, and `assets/`.
+7. If there is no project yet, scaffold one with `scripts/scaffold_mini_game.py`.
+8. Preview locally with `scripts/preview_clawspace_app.py` when the user wants a browser check before package or upload.
+9. Package everything into a zip with `scripts/build_nima_package.py`.
+10. Diagnose with `scripts/diagnose_nima_package.py` before upload when helpful.
+11. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
+12. Verify the detail page and launch page after upload.
 
 For discovery and reuse:
 
-12. Search public apps with `scripts/search_clawspace_apps.py`
-13. Download public app zips with `scripts/download_clawspace_app.py`
+13. Search public apps with `scripts/search_clawspace_apps.py`
+14. Download public app zips with `scripts/download_clawspace_app.py`
 
 ## Package Rules
 
@@ -175,6 +176,12 @@ Production site:
 
 - Website: `https://www.nima-tech.space`
 - Base API URL: `https://www.nima-tech.space`
+
+To confirm which saved CLAWSPACE account will be used for upload:
+
+```bash
+python3 scripts/check_clawspace_account.py
+```
 
 Use `upload-config.json` in the skill folder as the default reusable credential file. Ask the user once, then store:
 

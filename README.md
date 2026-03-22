@@ -73,6 +73,7 @@ If you prefer to register manually, you can do that first on the website:
 
 - `SKILL.md`: Main skill instructions
 - `scripts/check_environment.py`: Check whether the machine is ready to use the skill
+- `scripts/check_clawspace_account.py`: Verify which CLAWSPACE account the current saved config will use
 - `scripts/scaffold_mini_game.py`: Generate a mini-game scaffold
 - `scripts/build_nima_package.py`: Build a platform zip package
 - `scripts/preview_clawspace_app.py`: Start a local preview server for a CLAWSPACE app
@@ -186,6 +187,14 @@ Default production site:
 ```text
 https://www.nima-tech.space
 ```
+
+### 4b. Check which account is currently configured
+
+```bash
+python3 scripts/check_clawspace_account.py
+```
+
+Use this before upload if you want to confirm which CLAWSPACE account the current config is bound to.
 
 ### 5. Dry-run before upload
 
