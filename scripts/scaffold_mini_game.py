@@ -136,6 +136,14 @@ def _circle(x: int, y: int, cx: float, cy: float, radius: float) -> bool:
     return dx * dx + dy * dy <= radius * radius
 
 
+def _ellipse(x: int, y: int, cx: float, cy: float, rx: float, ry: float) -> bool:
+    if rx == 0 or ry == 0:
+        return False
+    dx = (x - cx) / rx
+    dy = (y - cy) / ry
+    return dx * dx + dy * dy <= 1.0
+
+
 def _ring(x: int, y: int, cx: float, cy: float, radius: float, thickness: float) -> bool:
     distance = math.hypot(x - cx, y - cy)
     return radius - thickness <= distance <= radius + thickness
@@ -156,18 +164,19 @@ def _distance_to_segment(x: int, y: int, ax: float, ay: float, bx: float, by: fl
 
 
 def infer_art_direction(template_name: str, slug: str) -> str:
-    combined = f"{template_name}-{slug}".lower()
+    slug_text = slug.lower()
+    template_text = template_name.lower()
     keyword_map = [
         ("ocr", "ocr"),
         ("scan", "ocr"),
-        ("heist", "space-heist"),
-        ("orbit", "space-heist"),
         ("tetris", "tetris"),
         ("quest", "pixel-rpg"),
         ("pixel", "pixel-rpg"),
         ("murder", "mystery"),
         ("detective", "mystery"),
         ("factory", "factory"),
+        ("heist", "space-heist"),
+        ("orbit", "space-heist"),
         ("comeback", "chat"),
         ("chat", "chat"),
         ("rewriter", "ai"),
@@ -177,7 +186,7 @@ def infer_art_direction(template_name: str, slug: str) -> str:
         ("flip", "cards"),
     ]
     for keyword, motif in keyword_map:
-        if keyword in combined:
+        if keyword in slug_text:
             return motif
 
     template_map = {
@@ -187,6 +196,9 @@ def infer_art_direction(template_name: str, slug: str) -> str:
         "ai-rewriter": "ai",
         "ocr-tool": "ocr",
     }
+    for keyword, motif in keyword_map:
+        if keyword in template_text:
+            return motif
     return template_map.get(template_name, "generic")
 
 
@@ -223,6 +235,9 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], m
     secondary = palette["secondary"]
     accent = palette["accent"]
     white = (250, 252, 255)
+    lobster_shell = (255, 111, 83)
+    lobster_cream = (255, 236, 222)
+    lobster_gold = (255, 198, 103)
 
     def pixel_at(x: int, y: int) -> bytes:
         vertical = y / max(1, height - 1)
@@ -343,6 +358,18 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], m
                 base = _mix(base, white, 0.7)
             if _distance_to_segment(x, y, width * 0.76, height * 0.36, width * 0.76, height * 0.56) < 8:
                 base = _mix(base, white, 0.65)
+            if _ellipse(x, y, width * 0.26, height * 0.50, width * 0.09, height * 0.13):
+                base = _mix(base, lobster_shell, 0.92)
+            if _ellipse(x, y, width * 0.26, height * 0.41, width * 0.065, height * 0.08):
+                base = _mix(base, lobster_shell, 0.98)
+            if _distance_to_segment(x, y, width * 0.23, height * 0.34, width * 0.21, height * 0.23) < 6 or _distance_to_segment(x, y, width * 0.29, height * 0.34, width * 0.31, height * 0.23) < 6:
+                base = _mix(base, lobster_cream, 0.85)
+            if _circle(x, y, width * 0.21, height * 0.23, 11) or _circle(x, y, width * 0.31, height * 0.23, 11):
+                base = _mix(base, lobster_cream, 0.92)
+            if _ellipse(x, y, width * 0.18, height * 0.49, width * 0.05, height * 0.035) or _ellipse(x, y, width * 0.34, height * 0.49, width * 0.05, height * 0.035):
+                base = _mix(base, lobster_gold, 0.84)
+            if _rect(x, y, width * 0.20, height * 0.39, width * 0.32, height * 0.43):
+                base = _mix(base, white, 0.55)
         elif motif == "mystery":
             if _rect(x, y, width * 0.26, height * 0.30, width * 0.68, height * 0.62):
                 base = _mix(primary, white, 0.1)
@@ -365,11 +392,58 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], m
                 base = _mix(base, accent, 0.84)
             if _circle(x, y, width * 0.67, height * 0.58, 30):
                 base = _mix(base, accent, 0.82)
+            px = 30
+            lobster_blocks = [
+                (11, 11, 3, 2, lobster_shell),
+                (10, 9, 5, 2, lobster_shell),
+                (9, 7, 2, 2, lobster_shell),
+                (14, 7, 2, 2, lobster_shell),
+                (10, 13, 1, 2, lobster_gold),
+                (13, 13, 1, 2, lobster_gold),
+                (11, 8, 1, 1, white),
+                (14, 8, 1, 1, white),
+            ]
+            origin_x = width * 0.30
+            origin_y = height * 0.12
+            for gx0, gy0, gw, gh, color in lobster_blocks:
+                left = origin_x + gx0 * px
+                top = origin_y + gy0 * px
+                right = left + gw * px
+                bottom = top + gh * px
+                if _rect(x, y, left, top, right, bottom):
+                    base = _mix(base, color, 0.95)
         else:
             if _ring(x, y, width * 0.5, height * 0.52, width * 0.18, 5):
                 base = _mix(base, white, 0.7)
             if _circle(x, y, width * 0.5, height * 0.52, width * 0.08):
                 base = _mix(accent, white, 0.2)
+
+        if motif == "space-heist":
+            if _ellipse(x, y, width * 0.32, height * 0.63, width * 0.11, height * 0.15):
+                base = _mix(base, lobster_shell, 0.92)
+            if _ellipse(x, y, width * 0.32, height * 0.49, width * 0.09, height * 0.10):
+                base = _mix(base, lobster_shell, 0.96)
+            if _ellipse(x, y, width * 0.32, height * 0.49, width * 0.11, height * 0.12) and not _ellipse(x, y, width * 0.32, height * 0.49, width * 0.08, height * 0.09):
+                base = _mix(base, white, 0.78)
+            if _distance_to_segment(x, y, width * 0.28, height * 0.40, width * 0.25, height * 0.29) < 7 or _distance_to_segment(x, y, width * 0.36, height * 0.40, width * 0.39, height * 0.29) < 7:
+                base = _mix(base, lobster_cream, 0.85)
+            if _circle(x, y, width * 0.25, height * 0.29, 13) or _circle(x, y, width * 0.39, height * 0.29, 13):
+                base = _mix(base, lobster_cream, 0.92)
+            if _ellipse(x, y, width * 0.20, height * 0.64, width * 0.06, height * 0.04) or _ellipse(x, y, width * 0.44, height * 0.64, width * 0.06, height * 0.04):
+                base = _mix(base, lobster_gold, 0.82)
+            if _rect(x, y, width * 0.26, height * 0.47, width * 0.38, height * 0.50):
+                base = _mix(base, white, 0.58)
+        elif motif == "tetris":
+            if _ellipse(x, y, width * 0.26, height * 0.54, width * 0.085, height * 0.12):
+                base = _mix(base, lobster_shell, 0.94)
+            if _ellipse(x, y, width * 0.26, height * 0.43, width * 0.06, height * 0.075):
+                base = _mix(base, lobster_shell, 0.98)
+            if _distance_to_segment(x, y, width * 0.23, height * 0.37, width * 0.21, height * 0.28) < 6 or _distance_to_segment(x, y, width * 0.29, height * 0.37, width * 0.31, height * 0.28) < 6:
+                base = _mix(base, lobster_cream, 0.82)
+            if _circle(x, y, width * 0.21, height * 0.28, 10) or _circle(x, y, width * 0.31, height * 0.28, 10):
+                base = _mix(base, lobster_cream, 0.9)
+            if _distance_to_segment(x, y, width * 0.34, height * 0.52, width * 0.48, height * 0.40) < 10 or _distance_to_segment(x, y, width * 0.48, height * 0.40, width * 0.56, height * 0.45) < 10:
+                base = _mix(base, lobster_gold, 0.9)
 
         return _rgba(base)
 
@@ -383,6 +457,9 @@ def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif:
     secondary = palette["secondary"]
     accent = palette["accent"]
     white = (250, 252, 255)
+    lobster_shell = (255, 111, 83)
+    lobster_cream = (255, 236, 222)
+    lobster_gold = (255, 198, 103)
 
     def pixel_at(x: int, y: int) -> bytes:
         horizontal = x / max(1, size - 1)
@@ -464,6 +541,14 @@ def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif:
                 base = _mix(accent, white, 0.14)
             if _ring(x, y, size * 0.74, size * 0.30, size * 0.08, 8):
                 base = _mix(base, white, 0.7)
+            if _ellipse(x, y, size * 0.26, size * 0.54, size * 0.09, size * 0.13):
+                base = _mix(base, lobster_shell, 0.94)
+            if _ellipse(x, y, size * 0.26, size * 0.42, size * 0.07, size * 0.08):
+                base = _mix(base, lobster_shell, 0.98)
+            if _circle(x, y, size * 0.22, size * 0.27, 12) or _circle(x, y, size * 0.30, size * 0.27, 12):
+                base = _mix(base, lobster_cream, 0.92)
+            if _ellipse(x, y, size * 0.18, size * 0.53, size * 0.05, size * 0.03) or _ellipse(x, y, size * 0.34, size * 0.53, size * 0.05, size * 0.03):
+                base = _mix(base, lobster_gold, 0.84)
         elif motif == "mystery":
             if _circle(x, y, size * 0.50, size * 0.42, size * 0.14) and not _circle(x, y, size * 0.50, size * 0.42, size * 0.09):
                 base = _mix(accent, white, 0.18)
@@ -476,6 +561,24 @@ def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif:
                 base = _mix(base, accent, 0.84)
             if _circle(x, y, size * 0.72, size * 0.62, 24):
                 base = _mix(base, accent, 0.82)
+            px = 16
+            blocks = [
+                (7, 8, 2, 2, lobster_shell),
+                (6, 6, 4, 2, lobster_shell),
+                (5, 5, 1, 1, lobster_gold),
+                (10, 5, 1, 1, lobster_gold),
+                (7, 5, 1, 1, white),
+                (9, 5, 1, 1, white),
+            ]
+            ox = size * 0.18
+            oy = size * 0.18
+            for gx0, gy0, gw, gh, color in blocks:
+                left = ox + gx0 * px
+                top = oy + gy0 * px
+                right = left + gw * px
+                bottom = top + gh * px
+                if _rect(x, y, left, top, right, bottom):
+                    base = _mix(base, color, 0.95)
         else:
             core_radius = size * 0.22
             if distance < core_radius:
@@ -485,6 +588,27 @@ def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif:
                 base = _blend(base, white, 0.62)
             elif ring_distance < 12:
                 base = _blend(base, secondary, 0.35)
+
+        if motif == "space-heist":
+            if _ellipse(x, y, size * 0.34, size * 0.58, size * 0.11, size * 0.14):
+                base = _mix(base, lobster_shell, 0.94)
+            if _ellipse(x, y, size * 0.34, size * 0.44, size * 0.08, size * 0.09):
+                base = _mix(base, lobster_shell, 0.98)
+            if _ellipse(x, y, size * 0.34, size * 0.44, size * 0.10, size * 0.11) and not _ellipse(x, y, size * 0.34, size * 0.44, size * 0.07, size * 0.08):
+                base = _mix(base, white, 0.74)
+            if _circle(x, y, size * 0.28, size * 0.28, 11) or _circle(x, y, size * 0.40, size * 0.28, 11):
+                base = _mix(base, lobster_cream, 0.9)
+            if _ellipse(x, y, size * 0.22, size * 0.58, size * 0.05, size * 0.03) or _ellipse(x, y, size * 0.46, size * 0.58, size * 0.05, size * 0.03):
+                base = _mix(base, lobster_gold, 0.82)
+        elif motif == "tetris":
+            if _ellipse(x, y, size * 0.28, size * 0.58, size * 0.085, size * 0.12):
+                base = _mix(base, lobster_shell, 0.94)
+            if _ellipse(x, y, size * 0.28, size * 0.46, size * 0.06, size * 0.07):
+                base = _mix(base, lobster_shell, 0.98)
+            if _circle(x, y, size * 0.23, size * 0.33, 10) or _circle(x, y, size * 0.33, size * 0.33, 10):
+                base = _mix(base, lobster_cream, 0.9)
+            if _distance_to_segment(x, y, size * 0.38, size * 0.54, size * 0.56, size * 0.42) < 8:
+                base = _mix(base, lobster_gold, 0.9)
 
         return _rgba(base)
 
