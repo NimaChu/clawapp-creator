@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import binascii
 import json
+import math
 import re
 import shutil
 import struct
@@ -121,6 +122,74 @@ def _rgba(color: tuple[int, int, int], alpha: int = 255) -> bytes:
     return bytes((_clamp(color[0]), _clamp(color[1]), _clamp(color[2]), _clamp(alpha)))
 
 
+def _mix(base: tuple[int, int, int], overlay: tuple[int, int, int], strength: float) -> tuple[int, int, int]:
+    return _blend(base, overlay, max(0.0, min(1.0, strength)))
+
+
+def _rect(x: int, y: int, left: float, top: float, right: float, bottom: float) -> bool:
+    return left <= x <= right and top <= y <= bottom
+
+
+def _circle(x: int, y: int, cx: float, cy: float, radius: float) -> bool:
+    dx = x - cx
+    dy = y - cy
+    return dx * dx + dy * dy <= radius * radius
+
+
+def _ring(x: int, y: int, cx: float, cy: float, radius: float, thickness: float) -> bool:
+    distance = math.hypot(x - cx, y - cy)
+    return radius - thickness <= distance <= radius + thickness
+
+
+def _distance_to_segment(x: int, y: int, ax: float, ay: float, bx: float, by: float) -> float:
+    abx = bx - ax
+    aby = by - ay
+    apx = x - ax
+    apy = y - ay
+    ab2 = abx * abx + aby * aby
+    if ab2 == 0:
+        return math.hypot(x - ax, y - ay)
+    t = max(0.0, min(1.0, (apx * abx + apy * aby) / ab2))
+    closest_x = ax + abx * t
+    closest_y = ay + aby * t
+    return math.hypot(x - closest_x, y - closest_y)
+
+
+def infer_art_direction(template_name: str, slug: str) -> str:
+    combined = f"{template_name}-{slug}".lower()
+    keyword_map = [
+        ("ocr", "ocr"),
+        ("scan", "ocr"),
+        ("heist", "space-heist"),
+        ("orbit", "space-heist"),
+        ("tetris", "tetris"),
+        ("quest", "pixel-rpg"),
+        ("pixel", "pixel-rpg"),
+        ("murder", "mystery"),
+        ("detective", "mystery"),
+        ("factory", "factory"),
+        ("comeback", "chat"),
+        ("chat", "chat"),
+        ("rewriter", "ai"),
+        ("focus", "timer"),
+        ("timer", "timer"),
+        ("memory", "cards"),
+        ("flip", "cards"),
+    ]
+    for keyword, motif in keyword_map:
+        if keyword in combined:
+            return motif
+
+    template_map = {
+        "orbit-tap": "space-heist",
+        "memory-flip": "cards",
+        "focus-timer": "timer",
+        "ai-rewriter": "ai",
+        "ocr-tool": "ocr",
+    }
+    return template_map.get(template_name, "generic")
+
+
 def _png_chunk(chunk_type: bytes, data: bytes) -> bytes:
     crc = binascii.crc32(chunk_type + data) & 0xFFFFFFFF
     return struct.pack(">I", len(data)) + chunk_type + data + struct.pack(">I", crc)
@@ -147,7 +216,7 @@ def write_png(path: Path, width: int, height: int, pixel_at) -> None:
     path.write_bytes(png)
 
 
-def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]]) -> None:
+def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], motif: str) -> None:
     width, height = 1280, 720
     background = palette["background"]
     primary = palette["primary"]
@@ -175,42 +244,139 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]]) -
         if glow2 > 0:
             base = _blend(base, white, glow2 * 0.38)
 
-        orbit_y = height * 0.58
-        orbit_curve = ((x - width * 0.52) / (width * 0.4)) ** 2
-        orbit_distance = abs(y - (orbit_y + orbit_curve * 26))
-        if orbit_distance < 2.4:
-            base = _blend(base, white, 0.58)
-        elif orbit_distance < 5.5:
-            base = _blend(base, secondary, 0.28)
-
-        planet_dx = x - width * 0.68
-        planet_dy = y - height * 0.49
-        planet_distance = (planet_dx * planet_dx + planet_dy * planet_dy) ** 0.5
-        planet_radius = width * 0.09
-        if planet_distance < planet_radius:
-            shade = 1.0 - planet_distance / planet_radius
-            planet = _blend(primary, secondary, 0.35 + 0.25 * horizontal)
-            planet = _blend(planet, white, shade * 0.24)
-            base = planet
-        elif planet_distance < planet_radius + 6:
-            ring = max(0.0, 1.0 - (planet_distance - planet_radius) / 6)
-            base = _blend(base, accent, ring * 0.6)
-
-        star_dx = x - width * 0.22
-        star_dy = y - height * 0.38
-        star_distance = (star_dx * star_dx + star_dy * star_dy) ** 0.5
-        star_radius = width * 0.075
-        if star_distance < star_radius:
-            star = _blend(accent, white, 0.45)
-            star = _blend(star, white, max(0.0, 1.0 - star_distance / star_radius) * 0.4)
-            base = star
+        if motif == "space-heist":
+            if _ring(x, y, width * 0.55, height * 0.58, width * 0.21, 3.0):
+                base = _mix(base, white, 0.75)
+            if _circle(x, y, width * 0.28, height * 0.34, width * 0.075):
+                glow = max(0.0, 1.0 - math.hypot(x - width * 0.28, y - height * 0.34) / (width * 0.075))
+                base = _mix(_blend(accent, white, 0.5), white, glow * 0.25)
+            if _circle(x, y, width * 0.68, height * 0.49, width * 0.09):
+                distance = math.hypot(x - width * 0.68, y - height * 0.49)
+                shade = 1.0 - distance / (width * 0.09)
+                base = _mix(_blend(primary, secondary, 0.45), white, shade * 0.22)
+            if _distance_to_segment(x, y, width * 0.48, height * 0.67, width * 0.58, height * 0.62) < 7 or _distance_to_segment(x, y, width * 0.58, height * 0.62, width * 0.55, height * 0.72) < 7:
+                base = _mix(base, accent, 0.82)
+        elif motif == "cards":
+            cards = [
+                (width * 0.22, height * 0.22, width * 0.42, height * 0.56, primary),
+                (width * 0.40, height * 0.28, width * 0.60, height * 0.62, secondary),
+                (width * 0.58, height * 0.22, width * 0.78, height * 0.56, accent),
+            ]
+            for left, top, right, bottom, color in cards:
+                if _rect(x, y, left, top, right, bottom):
+                    inset = min(x - left, right - x, y - top, bottom - y)
+                    base = _mix(color, white, max(0.0, min(1.0, inset / 28)) * 0.18)
+                elif _rect(x, y, left - 4, top - 4, right + 4, bottom + 4):
+                    base = _mix(base, white, 0.25)
+        elif motif == "timer":
+            if _ring(x, y, width * 0.5, height * 0.48, width * 0.15, 12):
+                base = _mix(base, white, 0.72)
+            if _distance_to_segment(x, y, width * 0.5, height * 0.48, width * 0.5, height * 0.37) < 8:
+                base = _mix(base, accent, 0.85)
+            if _distance_to_segment(x, y, width * 0.5, height * 0.48, width * 0.59, height * 0.53) < 8:
+                base = _mix(base, secondary, 0.88)
+            if _rect(x, y, width * 0.34, height * 0.7, width * 0.66, height * 0.77):
+                base = _mix(_blend(primary, secondary, horizontal), white, 0.16)
+        elif motif == "ai":
+            for ax, ay, bx, by in [
+                (width * 0.32, height * 0.32, width * 0.62, height * 0.26),
+                (width * 0.62, height * 0.26, width * 0.72, height * 0.56),
+                (width * 0.32, height * 0.32, width * 0.42, height * 0.62),
+                (width * 0.42, height * 0.62, width * 0.72, height * 0.56),
+            ]:
+                if _distance_to_segment(x, y, ax, ay, bx, by) < 5:
+                    base = _mix(base, white, 0.55)
+            for cx, cy, color in [
+                (width * 0.32, height * 0.32, primary),
+                (width * 0.62, height * 0.26, secondary),
+                (width * 0.72, height * 0.56, accent),
+                (width * 0.42, height * 0.62, white),
+            ]:
+                if _circle(x, y, cx, cy, 24):
+                    base = _mix(color, white, 0.16)
+        elif motif == "ocr":
+            if _rect(x, y, width * 0.27, height * 0.18, width * 0.73, height * 0.78):
+                base = _mix((242, 246, 255), white, 0.15)
+            if _rect(x, y, width * 0.31, height * 0.28, width * 0.69, height * 0.31) or _rect(x, y, width * 0.31, height * 0.39, width * 0.63, height * 0.42):
+                base = _mix(base, primary, 0.65)
+            if _ring(x, y, width * 0.5, height * 0.52, width * 0.2, 4):
+                base = _mix(base, accent, 0.82)
+            if _rect(x, y, width * 0.34, height * 0.36, width * 0.66, height * 0.68):
+                border = abs(x - width * 0.34) < 4 or abs(x - width * 0.66) < 4 or abs(y - height * 0.36) < 4 or abs(y - height * 0.68) < 4
+                if border:
+                    base = _mix(base, accent, 0.85)
+            if _rect(x, y, width * 0.36, height * 0.5, width * 0.64, height * 0.515):
+                base = _mix(base, secondary, 0.9)
+        elif motif == "tetris":
+            for left, top, right, bottom, color in [
+                (width * 0.26, height * 0.26, width * 0.36, height * 0.36, primary),
+                (width * 0.36, height * 0.26, width * 0.46, height * 0.36, primary),
+                (width * 0.46, height * 0.26, width * 0.56, height * 0.36, primary),
+                (width * 0.46, height * 0.36, width * 0.56, height * 0.46, primary),
+                (width * 0.60, height * 0.42, width * 0.70, height * 0.52, accent),
+                (width * 0.70, height * 0.42, width * 0.80, height * 0.52, accent),
+                (width * 0.60, height * 0.52, width * 0.70, height * 0.62, accent),
+                (width * 0.70, height * 0.52, width * 0.80, height * 0.62, accent),
+            ]:
+                if _rect(x, y, left, top, right, bottom):
+                    base = _mix(color, white, 0.14)
+                elif _rect(x, y, left - 3, top - 3, right + 3, bottom + 3):
+                    base = _mix(base, white, 0.28)
+        elif motif == "chat":
+            if _rect(x, y, width * 0.20, height * 0.26, width * 0.56, height * 0.52):
+                base = _mix(primary, white, 0.2)
+            if _rect(x, y, width * 0.44, height * 0.40, width * 0.78, height * 0.66):
+                base = _mix(secondary, white, 0.18)
+            if _distance_to_segment(x, y, width * 0.38, height * 0.52, width * 0.31, height * 0.60) < 8 or _distance_to_segment(x, y, width * 0.64, height * 0.66, width * 0.71, height * 0.74) < 8:
+                base = _mix(base, accent, 0.7)
+            if _rect(x, y, width * 0.26, height * 0.34, width * 0.48, height * 0.355) or _rect(x, y, width * 0.50, height * 0.48, width * 0.70, height * 0.495):
+                base = _mix(base, white, 0.78)
+        elif motif == "factory":
+            if _rect(x, y, width * 0.14, height * 0.62, width * 0.86, height * 0.72):
+                base = _mix(_blend(primary, secondary, horizontal), white, 0.16)
+            for left in [0.20, 0.38, 0.56]:
+                if _rect(x, y, width * left, height * 0.44, width * (left + 0.12), height * 0.58):
+                    base = _mix(accent, white, 0.12)
+                elif _rect(x, y, width * left - 4, height * 0.44 - 4, width * (left + 0.12) + 4, height * 0.58 + 4):
+                    base = _mix(base, white, 0.3)
+            if _ring(x, y, width * 0.76, height * 0.36, width * 0.08, 8):
+                base = _mix(base, white, 0.7)
+            if _distance_to_segment(x, y, width * 0.76, height * 0.36, width * 0.76, height * 0.56) < 8:
+                base = _mix(base, white, 0.65)
+        elif motif == "mystery":
+            if _rect(x, y, width * 0.26, height * 0.30, width * 0.68, height * 0.62):
+                base = _mix(primary, white, 0.1)
+            if _circle(x, y, width * 0.58, height * 0.44, width * 0.1) and not _circle(x, y, width * 0.58, height * 0.44, width * 0.065):
+                base = _mix(accent, white, 0.12)
+            if _distance_to_segment(x, y, width * 0.65, height * 0.52, width * 0.75, height * 0.64) < 9:
+                base = _mix(base, accent, 0.78)
+            if _rect(x, y, width * 0.32, height * 0.38, width * 0.60, height * 0.395) or _rect(x, y, width * 0.32, height * 0.48, width * 0.55, height * 0.495):
+                base = _mix(base, white, 0.72)
+        elif motif == "pixel-rpg":
+            tile = 26
+            gx = int((x - width * 0.26) // tile)
+            gy = int((y - height * 0.24) // tile)
+            if _rect(x, y, width * 0.22, height * 0.20, width * 0.78, height * 0.76):
+                checker = (gx + gy) % 2
+                base = _mix(base, _blend(primary, secondary, checker * 0.35), 0.28)
+            if _distance_to_segment(x, y, width * 0.36, height * 0.64, width * 0.58, height * 0.38) < 9:
+                base = _mix(base, white, 0.8)
+            if _distance_to_segment(x, y, width * 0.55, height * 0.41, width * 0.63, height * 0.33) < 10:
+                base = _mix(base, accent, 0.84)
+            if _circle(x, y, width * 0.67, height * 0.58, 30):
+                base = _mix(base, accent, 0.82)
+        else:
+            if _ring(x, y, width * 0.5, height * 0.52, width * 0.18, 5):
+                base = _mix(base, white, 0.7)
+            if _circle(x, y, width * 0.5, height * 0.52, width * 0.08):
+                base = _mix(accent, white, 0.2)
 
         return _rgba(base)
 
     write_png(path, width, height, pixel_at)
 
 
-def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]]) -> None:
+def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif: str) -> None:
     size = 512
     background = palette["background"]
     primary = palette["primary"]
@@ -230,35 +396,108 @@ def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]]) -> Non
         dy = y - center_y
         distance = (dx * dx + dy * dy) ** 0.5
 
-        core_radius = size * 0.22
-        if distance < core_radius:
-            base = _blend(accent, white, max(0.0, 1.0 - distance / core_radius) * 0.35)
-
-        ring_distance = abs(distance - size * 0.32)
-        if ring_distance < 6:
-            base = _blend(base, white, 0.62)
-        elif ring_distance < 12:
-            base = _blend(base, secondary, 0.35)
-
-        badge_left = size * 0.18
-        badge_top = size * 0.7
-        if badge_left < x < size * 0.82 and badge_top < y < size * 0.83:
-            stripe = ((x - badge_left) / (size * 0.64))
-            badge = _blend(primary, secondary, stripe)
-            badge = _blend(badge, white, 0.16)
-            base = badge
+        if motif == "space-heist":
+            if _ring(x, y, center_x, center_y, size * 0.26, 8):
+                base = _mix(base, white, 0.68)
+            if _circle(x, y, size * 0.36, size * 0.36, size * 0.08):
+                base = _mix(accent, white, 0.22)
+            if _distance_to_segment(x, y, size * 0.48, size * 0.64, size * 0.62, size * 0.54) < 9 or _distance_to_segment(x, y, size * 0.62, size * 0.54, size * 0.59, size * 0.68) < 9:
+                base = _mix(base, accent, 0.86)
+        elif motif == "cards":
+            for left, top, right, bottom, color in [
+                (size * 0.18, size * 0.18, size * 0.42, size * 0.54, primary),
+                (size * 0.36, size * 0.24, size * 0.60, size * 0.60, secondary),
+                (size * 0.54, size * 0.18, size * 0.78, size * 0.54, accent),
+            ]:
+                if _rect(x, y, left, top, right, bottom):
+                    base = _mix(color, white, 0.16)
+        elif motif == "timer":
+            if _ring(x, y, center_x, center_y, size * 0.18, 10):
+                base = _mix(base, white, 0.74)
+            if _distance_to_segment(x, y, center_x, center_y, center_x, size * 0.28) < 8 or _distance_to_segment(x, y, center_x, center_y, size * 0.63, size * 0.56) < 8:
+                base = _mix(base, accent, 0.84)
+        elif motif == "ai":
+            for ax, ay, bx, by in [
+                (size * 0.28, size * 0.34, size * 0.56, size * 0.26),
+                (size * 0.56, size * 0.26, size * 0.72, size * 0.52),
+                (size * 0.28, size * 0.34, size * 0.42, size * 0.66),
+            ]:
+                if _distance_to_segment(x, y, ax, ay, bx, by) < 6:
+                    base = _mix(base, white, 0.62)
+            for cx, cy, color in [
+                (size * 0.28, size * 0.34, primary),
+                (size * 0.56, size * 0.26, secondary),
+                (size * 0.72, size * 0.52, accent),
+                (size * 0.42, size * 0.66, white),
+            ]:
+                if _circle(x, y, cx, cy, 20):
+                    base = _mix(color, white, 0.14)
+        elif motif == "ocr":
+            if _rect(x, y, size * 0.22, size * 0.16, size * 0.78, size * 0.82):
+                base = _mix((242, 246, 255), white, 0.15)
+            if _rect(x, y, size * 0.30, size * 0.30, size * 0.70, size * 0.32):
+                base = _mix(base, primary, 0.8)
+            if _rect(x, y, size * 0.32, size * 0.42, size * 0.68, size * 0.66):
+                border = min(abs(x - size * 0.32), abs(x - size * 0.68), abs(y - size * 0.42), abs(y - size * 0.66)) < 5
+                if border:
+                    base = _mix(base, accent, 0.86)
+            if _rect(x, y, size * 0.35, size * 0.53, size * 0.65, size * 0.545):
+                base = _mix(base, secondary, 0.88)
+        elif motif == "tetris":
+            for left, top, right, bottom, color in [
+                (size * 0.22, size * 0.22, size * 0.38, size * 0.38, primary),
+                (size * 0.38, size * 0.22, size * 0.54, size * 0.38, primary),
+                (size * 0.54, size * 0.22, size * 0.70, size * 0.38, primary),
+                (size * 0.54, size * 0.38, size * 0.70, size * 0.54, primary),
+            ]:
+                if _rect(x, y, left, top, right, bottom):
+                    base = _mix(color, white, 0.14)
+        elif motif == "chat":
+            if _rect(x, y, size * 0.18, size * 0.24, size * 0.56, size * 0.50):
+                base = _mix(primary, white, 0.18)
+            if _rect(x, y, size * 0.42, size * 0.42, size * 0.80, size * 0.68):
+                base = _mix(secondary, white, 0.16)
+        elif motif == "factory":
+            if _rect(x, y, size * 0.16, size * 0.64, size * 0.84, size * 0.74):
+                base = _mix(primary, white, 0.18)
+            if _rect(x, y, size * 0.24, size * 0.38, size * 0.42, size * 0.56) or _rect(x, y, size * 0.46, size * 0.38, size * 0.64, size * 0.56):
+                base = _mix(accent, white, 0.14)
+            if _ring(x, y, size * 0.74, size * 0.30, size * 0.08, 8):
+                base = _mix(base, white, 0.7)
+        elif motif == "mystery":
+            if _circle(x, y, size * 0.50, size * 0.42, size * 0.14) and not _circle(x, y, size * 0.50, size * 0.42, size * 0.09):
+                base = _mix(accent, white, 0.18)
+            if _distance_to_segment(x, y, size * 0.58, size * 0.52, size * 0.72, size * 0.66) < 9:
+                base = _mix(base, accent, 0.84)
+        elif motif == "pixel-rpg":
+            if _distance_to_segment(x, y, size * 0.28, size * 0.70, size * 0.58, size * 0.34) < 10:
+                base = _mix(base, white, 0.8)
+            if _distance_to_segment(x, y, size * 0.54, size * 0.38, size * 0.66, size * 0.26) < 12:
+                base = _mix(base, accent, 0.84)
+            if _circle(x, y, size * 0.72, size * 0.62, 24):
+                base = _mix(base, accent, 0.82)
+        else:
+            core_radius = size * 0.22
+            if distance < core_radius:
+                base = _blend(accent, white, max(0.0, 1.0 - distance / core_radius) * 0.35)
+            ring_distance = abs(distance - size * 0.32)
+            if ring_distance < 6:
+                base = _blend(base, white, 0.62)
+            elif ring_distance < 12:
+                base = _blend(base, secondary, 0.35)
 
         return _rgba(base)
 
     write_png(path, size, size, pixel_at)
 
 
-def create_default_assets(assets_dir: Path, template_name: str) -> tuple[str, str]:
+def create_default_assets(assets_dir: Path, template_name: str, slug: str = "") -> tuple[str, str]:
     thumbnail_path = assets_dir / "thumbnail.png"
     icon_path = assets_dir / "icon.png"
     palette = TEMPLATE_PALETTES[template_name]
-    create_thumbnail_png(thumbnail_path, palette)
-    create_icon_png(icon_path, palette)
+    motif = infer_art_direction(template_name, slug)
+    create_thumbnail_png(thumbnail_path, palette, motif)
+    create_icon_png(icon_path, palette, motif)
     return "assets/thumbnail.png", "assets/icon.png"
 
 
@@ -290,7 +529,7 @@ def main() -> None:
 
     shutil.copytree(template_dir, app_dir)
     assets_dir.mkdir(parents=True, exist_ok=True)
-    thumbnail_asset, icon_asset = create_default_assets(assets_dir, args.template)
+    thumbnail_asset, icon_asset = create_default_assets(assets_dir, args.template, slug)
 
     replacements = {
         "__APP_NAME__": args.name,
