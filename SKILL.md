@@ -102,11 +102,18 @@ Or scaffold directly:
 
 ```bash
 python3 scripts/scaffold_mini_game.py \
-  --out /path/to/new-project \
   --name "Orbit Tap" \
   --slug orbit-tap \
   --description "点击轨道行星的轻量小游戏。"
 ```
+
+If `--out` is omitted, default to the OpenClaw workspace app directory:
+
+```text
+~/.openclaw/workspace/projects/apps/<slug>
+```
+
+Prefer this default for first-time users, so OpenClaw-generated apps live in a predictable place under its own workspace.
 
 After scaffolding, encourage the user to add:
 - a custom cover image if they want to replace the generated default

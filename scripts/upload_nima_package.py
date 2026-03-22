@@ -261,6 +261,7 @@ def main() -> None:
             "Missing upload credentials.\n"
             f"- Current config file: {config_path}\n"
             f"- Expected fields: siteUrl, email, password (or Keychain password)\n"
+            "- New user? Run `python3 scripts/register_clawspace_account.py`\n"
             "- Quick fix: run `python3 scripts/setup_upload_config.py`\n"
             f"- Production site: {DEFAULT_SITE_URL}"
         )
@@ -287,7 +288,8 @@ def main() -> None:
         if not login_payload.get("success"):
             fail(
                 f"{login_payload.get('error') or 'login failed'}\n"
-                "Please check your saved credentials or run `python3 scripts/setup_upload_config.py` again."
+                "Please check your saved credentials or run `python3 scripts/setup_upload_config.py` again.\n"
+                "If you do not have an account yet, run `python3 scripts/register_clawspace_account.py` first."
             )
         done(f"Logged in as: {email}")
 

@@ -11,6 +11,8 @@ import struct
 import zlib
 from pathlib import Path
 
+DEFAULT_OPENCLAW_APPS_DIR = Path.home() / ".openclaw" / "workspace" / "projects" / "apps"
+
 TEMPLATES = {
     "orbit-tap": {
         "dir": "starter-mini-game",
@@ -625,9 +627,18 @@ def create_default_assets(assets_dir: Path, template_name: str, slug: str = "") 
     return "assets/thumbnail.png", "assets/icon.png"
 
 
+def resolve_output_dir(out_arg: str | None, slug: str) -> Path:
+    if out_arg:
+        return Path(out_arg).expanduser().resolve()
+    return (DEFAULT_OPENCLAW_APPS_DIR / slug).resolve()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Scaffold a starter static mini-game for Nima Tech Space.")
-    parser.add_argument("--out", required=True, help="Output project directory")
+    parser.add_argument(
+        "--out",
+        help=f"Output project directory. Defaults to {DEFAULT_OPENCLAW_APPS_DIR}/<slug>",
+    )
     parser.add_argument("--name", required=True, help="App name")
     parser.add_argument("--slug", help="App slug, defaults to slugified name")
     parser.add_argument("--description", required=True, help="One-line app description")
@@ -642,10 +653,10 @@ def main() -> None:
     manifest_template_path = skill_dir / "assets" / "manifest.example.json"
     readme_template_path = skill_dir / "assets" / "README.template.md"
 
-    out_dir = Path(args.out).expanduser().resolve()
+    slug = slugify(args.slug or args.name)
+    out_dir = resolve_output_dir(args.out, slug)
     app_dir = out_dir / "app"
     assets_dir = out_dir / "assets"
-    slug = slugify(args.slug or args.name)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     if any(out_dir.iterdir()):
@@ -704,6 +715,8 @@ def main() -> None:
     print(f"Scaffolded project: {out_dir}")
     print(f"Package slug: {slug}")
     print(f"Starter template: {args.template}")
+    if not args.out:
+        print(f"Default OpenClaw apps directory: {DEFAULT_OPENCLAW_APPS_DIR}")
     print("Generated default cover assets: assets/thumbnail.png and assets/icon.png")
     print("You can replace them with custom PNG/JPG/WebP artwork later for a stronger store listing.")
     print("Next step: build or customize the app under app/, then package it with build_nima_package.py")

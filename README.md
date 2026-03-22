@@ -96,9 +96,14 @@ If this reports warnings, fix those first. It is the fastest way to confirm whet
 
 ```bash
 python3 scripts/scaffold_mini_game.py \
-  --out /path/to/new-project \
   --name "Orbit Tap" \
   --description "A lightweight game about tapping planets on an orbit."
+```
+
+If you skip `--out`, ClawApp Creator now creates the project in the default OpenClaw workspace:
+
+```text
+~/.openclaw/workspace/projects/apps/<slug>
 ```
 
 Every scaffold now includes default cover assets:
@@ -114,10 +119,15 @@ For mobile shells such as WeChat Mini Program, PNG/JPG/WebP is recommended. If c
 ```bash
 python3 scripts/scaffold_mini_game.py \
   --template ocr-tool \
-  --out /path/to/ocr-tool \
   --name "Online OCR Tool" \
   --description "Upload an image and extract text, tables, or visual content."
 ```
+
+This makes the default project storage path predictable for OpenClaw users:
+
+- all generated projects go under `~/.openclaw/workspace/projects/apps/`
+- each app gets its own folder named by slug
+- packaged zips and local preview flows can reuse that same folder directly
 
 ### 2. Build a package
 
