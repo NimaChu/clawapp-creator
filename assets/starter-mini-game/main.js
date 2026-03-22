@@ -1,11 +1,16 @@
+import { createGameStorage } from './lib/clawspace-game-storage.js';
+
 const scoreNode = document.getElementById('score');
+const bestScoreNode = document.getElementById('best-score');
 const timeNode = document.getElementById('time');
 const startButton = document.getElementById('start-button');
 const resetButton = document.getElementById('reset-button');
 const planet = document.getElementById('planet');
 const board = document.querySelector('.game-board');
+const gameStorage = createGameStorage('__APP_SLUG__');
 
 let score = 0;
+let bestScore = gameStorage.getNumber('best-score', 0);
 let timeLeft = 45;
 let timerId = null;
 let running = false;
@@ -31,6 +36,7 @@ function movePlanet() {
 
 function updateHud() {
   scoreNode.textContent = String(score);
+  bestScoreNode.textContent = String(bestScore);
   timeNode.textContent = String(timeLeft);
 }
 
@@ -38,6 +44,8 @@ function finishGame() {
   running = false;
   clearInterval(timerId);
   timerId = null;
+  bestScore = gameStorage.updateBest('best-score', score, { mode: 'max', fallback: 0 });
+  updateHud();
   startButton.textContent = '再玩一次';
 }
 

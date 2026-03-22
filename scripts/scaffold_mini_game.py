@@ -652,6 +652,7 @@ def main() -> None:
     template_dir = skill_dir / "assets" / template["dir"]
     manifest_template_path = skill_dir / "assets" / "manifest.example.json"
     readme_template_path = skill_dir / "assets" / "README.template.md"
+    game_storage_helper_path = skill_dir / "assets" / "clawspace-game-storage.js"
 
     slug = slugify(args.slug or args.name)
     out_dir = resolve_output_dir(args.out, slug)
@@ -663,6 +664,9 @@ def main() -> None:
       raise SystemExit(f"output directory is not empty: {out_dir}")
 
     shutil.copytree(template_dir, app_dir)
+    helper_target_dir = app_dir / "lib"
+    helper_target_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(game_storage_helper_path, helper_target_dir / "clawspace-game-storage.js")
     assets_dir.mkdir(parents=True, exist_ok=True)
     thumbnail_asset, icon_asset = create_default_assets(assets_dir, args.template, slug)
 
@@ -719,6 +723,7 @@ def main() -> None:
         print(f"Default OpenClaw apps directory: {DEFAULT_OPENCLAW_APPS_DIR}")
     print("Generated default cover assets: assets/thumbnail.png and assets/icon.png")
     print("You can replace them with custom PNG/JPG/WebP artwork later for a stronger store listing.")
+    print("Reusable local score storage helper added at: app/lib/clawspace-game-storage.js")
     print("Next step: build or customize the app under app/, then package it with build_nima_package.py")
 
 

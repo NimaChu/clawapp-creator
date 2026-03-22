@@ -1,8 +1,12 @@
+import { createGameStorage } from './lib/clawspace-game-storage.js';
+
 const board = document.getElementById('board');
 const pairsNode = document.getElementById('pairs');
 const movesNode = document.getElementById('moves');
+const bestMovesNode = document.getElementById('best-moves');
 const startButton = document.getElementById('start-button');
 const resetButton = document.getElementById('reset-button');
+const gameStorage = createGameStorage('__APP_SLUG__');
 
 const symbols = ['A', 'B', 'C', 'D', 'E', 'F'];
 let cards = [];
@@ -10,6 +14,7 @@ let flipped = [];
 let matchedPairs = 0;
 let moves = 0;
 let locked = false;
+let bestMoves = gameStorage.getNumber('best-moves', 0);
 
 function shuffle(list) {
   return [...list]
@@ -21,6 +26,7 @@ function shuffle(list) {
 function updateHud() {
   pairsNode.textContent = String(matchedPairs);
   movesNode.textContent = String(moves);
+  bestMovesNode.textContent = bestMoves > 0 ? String(bestMoves) : '--';
 }
 
 function createDeck() {
@@ -82,6 +88,9 @@ function revealCard(cardId, button) {
     secondButton?.classList.add('matched');
     flipped = [];
     locked = false;
+    if (matchedPairs === symbols.length) {
+      bestMoves = gameStorage.updateBest('best-moves', moves, { mode: 'min', fallback: 0 });
+    }
     updateHud();
     return;
   }

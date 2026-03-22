@@ -2,6 +2,8 @@
 
 These are the first starter templates designed for CLAWSPACE creators and OpenClaw users.
 
+All game-oriented starters now include a reusable helper at `app/lib/clawspace-game-storage.js`, so creators can persist best scores, best runs, or other lightweight progress with browser storage instead of rewriting localStorage logic each time.
+
 ## Design goals
 
 - fast to scaffold

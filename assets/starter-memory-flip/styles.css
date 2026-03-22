@@ -45,7 +45,7 @@ h1 { margin: 14px 0 10px; font-size: clamp(36px, 5vw, 64px); }
 .subtitle { margin: 0; color: var(--muted); line-height: 1.7; }
 .stats {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin: 24px 0;
 }
@@ -104,4 +104,5 @@ button {
 .card.matched .card-back { background: linear-gradient(135deg, #86efac, #22c55e); }
 @media (max-width: 900px) {
   .app-shell { grid-template-columns: 1fr; padding: 24px 0; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
