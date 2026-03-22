@@ -121,7 +121,7 @@ Why it works:
 
 - demonstrates the platform multimodal API with a real image upload flow
 - can be repurposed into many practical AI tools
-- includes generated PNG cover assets by default when scaffolded
+- includes generated default cover assets when scaffolded, and can be replaced with custom SVG or bitmap art later
 
 ## Recommended prompts for OpenClaw
 

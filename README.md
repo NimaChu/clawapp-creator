@@ -55,7 +55,7 @@ If you prefer to register manually, you can do that first on the website:
 
 - Generates a compliant `manifest.json`
 - Generates or fills in a `README.md`
-- Generates default `assets/thumbnail.png` and `assets/icon.png`
+- Generates default cover assets so creators start with a usable listing even if they do not prepare custom art
 - Validates the package structure
 - Starts a local preview server before packaging or upload
 - Checks risky asset paths
@@ -101,12 +101,13 @@ python3 scripts/scaffold_mini_game.py \
   --description "A lightweight game about tapping planets on an orbit."
 ```
 
-Every scaffold now includes:
+Every scaffold now includes default cover assets:
 
 - `assets/thumbnail.png`
 - `assets/icon.png`
 
-You can keep these generated PNG assets or replace them with your own cover art later.
+You can keep the generated assets or replace them later with your own PNG, JPG, WebP, or SVG cover art.
+For mobile shells such as WeChat Mini Program, PNG/JPG/WebP is recommended. If creators only provide SVG or skip custom art entirely, CLAWSPACE can fall back to default mobile-safe PNG covers.
 
 ### 1b. Scaffold an OCR / multimodal app
 

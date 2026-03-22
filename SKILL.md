@@ -62,8 +62,8 @@ Always enforce these minimum rules:
 - Put built files under `app/`.
 - Keep the entry file inside `app/`, usually `app/index.html`.
 - Keep package root flat: `manifest.json`, optional `README.md`, optional `assets/`, required `app/`.
-- Strongly recommend adding a cover image such as `assets/thumbnail.png` and at least one screenshot, even though CLAWSPACE can render a default cover when they are missing.
-- The scaffold now generates `assets/thumbnail.png` and `assets/icon.png` by default, so creators start with platform-safe raster cover art instead of SVG-only assets.
+- Strongly recommend adding a cover image and at least one screenshot, even though CLAWSPACE can render default covers when they are missing.
+- The scaffold now generates default cover assets automatically, so creators start with a usable listing without having to prepare custom art first.
 - Default `modelCategory` to `none` unless the app truly needs AI.
 - Keep the zip at or under `25MB`.
 - Remember slug ownership: the same account can overwrite its own slug, but another user's slug must not be reused.
@@ -109,11 +109,12 @@ python3 scripts/scaffold_mini_game.py \
 ```
 
 After scaffolding, encourage the user to add:
-- a custom `assets/thumbnail.png` as the app cover if they want to replace the generated default
-- a custom `assets/icon.png` as the square icon if they want to replace the generated default
+- a custom cover image if they want to replace the generated default
+- a custom square icon if they want to replace the generated default
 - at least one additional screenshot in `assets/`
 
-If they skip cover assets, the site can still publish the app with a default generated cover, but custom art makes the listing look much better.
+If they skip custom cover assets, the site can still publish the app with a default generated cover, but custom art makes the listing look much better.
+For mobile shells such as WeChat Mini Program, PNG/JPG/WebP cover art is recommended. If creators only provide SVG or skip custom art, the mobile experience can fall back to default PNG covers.
 
 Use:
 
