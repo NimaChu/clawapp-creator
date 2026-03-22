@@ -256,6 +256,14 @@ In publish mode, the skill should diagnose, package, verify slug ownership, uplo
 - If ClawHub is rate limited, users can still install the skill from GitHub.
 - macOS users get the smoothest credential flow because Keychain storage is supported directly.
 
+## Security Notes
+
+- The skill can register, log in, and upload on the user's behalf, so it should be treated as a publishing tool with account-level permissions.
+- On macOS, `keychain` is the recommended password storage mode.
+- `config` plaintext password storage is kept only as a compatibility fallback.
+- Before upload, creators can run `python3 scripts/check_clawspace_account.py` to confirm which account is currently active.
+- `upload_nima_package.py` now prints the active account summary before it uploads anything.
+
 ## Repository Role
 
 This repository is the source of the `clawapp-creator` skill and can also be installed directly into Codex skills directories.

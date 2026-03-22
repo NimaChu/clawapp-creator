@@ -37,6 +37,10 @@ def next_step(message: str) -> None:
     print(f"[next] {message}", file=sys.stderr)
 
 
+def warn(message: str) -> None:
+    print(f"[warn] {message}", file=sys.stderr)
+
+
 def run_curl(command: list[str]) -> str:
     result = subprocess.run(command, check=False, capture_output=True, text=True)
     if result.returncode != 0:
@@ -255,6 +259,7 @@ def main() -> None:
     if not args.password and config.get("useKeychain") and supports_keychain() and email:
         keychain_password = read_password_from_keychain(keychain_service, email)
     password = (args.password or config_password or keychain_password or "").strip()
+    password_source = "flag" if args.password else ("config" if config_password else ("keychain" if keychain_password else "unknown"))
 
     if not site_url or not email or not password:
         fail(
@@ -291,7 +296,16 @@ def main() -> None:
                 "Please check your saved credentials or run `python3 scripts/setup_upload_config.py` again.\n"
                 "If you do not have an account yet, run `python3 scripts/register_clawspace_account.py` first."
             )
-        done(f"Logged in as: {email}")
+        user = login_payload.get("user") or {}
+        done(
+            f"Logged in as: {user.get('displayName') or '(no display name)'} <{user.get('email') or email}>"
+        )
+        done(f"Account role: {user.get('role') or 'member'}")
+        if password_source == "config":
+            warn(
+                "Password is currently being read from plaintext upload-config.json. "
+                "For better security on macOS, rerun `python3 scripts/setup_upload_config.py` and choose `keychain`."
+            )
 
         stage("Reading manifest and checking slug ownership")
         slug = load_manifest_slug_from_zip(package_path)

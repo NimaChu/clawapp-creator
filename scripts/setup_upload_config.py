@@ -219,8 +219,10 @@ def main() -> None:
         print(f"Password saved to macOS Keychain service: {keychain_service}")
     if password_store == "config":
         print("Password stored in upload-config.json.")
+        print("Security note: plaintext config storage is the compatibility option. Prefer `keychain` on macOS when possible.")
     elif password_store == "both":
         print("Password stored in both upload-config.json and macOS Keychain.")
+        print("Security note: the config file still contains a plaintext password. Use `keychain` only for the safest local setup.")
     else:
         print("Password stored in macOS Keychain; upload-config.json keeps only site metadata.")
     print("Permissions set to 600.")
