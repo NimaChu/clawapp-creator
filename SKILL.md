@@ -257,6 +257,17 @@ python3 scripts/upload_nima_package.py \
   --dry-run
 ```
 
+If the package includes oversized PNG/JPG/WebP cover art, the uploader now warns before publish.
+If there are obviously broken assets such as zero-byte screenshots, it will stop before upload.
+On macOS, when a package has huge `thumbnail.png` or `icon.png` files, prefer:
+
+```bash
+python3 scripts/upload_nima_package.py \
+  --package /path/to/output.zip \
+  --model-category none \
+  --optimize-images
+```
+
 Use `none` unless the app truly needs the platform model.
 
 The upload script reads missing values from `upload-config.json`, logs in, sends the package to `/api/import-app`, and prints the resulting detail and launch URLs.

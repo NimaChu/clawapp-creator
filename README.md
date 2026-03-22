@@ -204,6 +204,20 @@ python3 scripts/upload_nima_package.py \
   --dry-run
 ```
 
+If your package has oversized PNG/JPG/WebP cover art, the script now warns before upload.
+It also blocks obviously broken assets such as zero-byte screenshots.
+
+On macOS you can ask the uploader to build an optimized copy first:
+
+```bash
+python3 scripts/upload_nima_package.py \
+  --package /path/to/output.zip \
+  --model-category none \
+  --optimize-images
+```
+
+That is especially useful when a package contains very large `thumbnail.png` or `icon.png` files that can make the server-side import finalize step fail.
+
 ### 6. Upload
 
 ```bash
