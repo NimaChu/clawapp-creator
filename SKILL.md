@@ -63,6 +63,7 @@ Always enforce these minimum rules:
 - Keep the entry file inside `app/`, usually `app/index.html`.
 - Keep package root flat: `manifest.json`, optional `README.md`, optional `assets/`, required `app/`.
 - Strongly recommend adding a cover image such as `assets/thumbnail.png` and at least one screenshot, even though CLAWSPACE can render a default cover when they are missing.
+- The scaffold now generates `assets/thumbnail.png` and `assets/icon.png` by default, so creators start with platform-safe raster cover art instead of SVG-only assets.
 - Default `modelCategory` to `none` unless the app truly needs AI.
 - Keep the zip at or under `25MB`.
 - Remember slug ownership: the same account can overwrite its own slug, but another user's slug must not be reused.
@@ -108,10 +109,9 @@ python3 scripts/scaffold_mini_game.py \
 ```
 
 After scaffolding, encourage the user to add:
-
-- `assets/thumbnail.png` as the app cover
-- `assets/icon.png` as the square icon
-- at least one screenshot in `assets/`
+- a custom `assets/thumbnail.png` as the app cover if they want to replace the generated default
+- a custom `assets/icon.png` as the square icon if they want to replace the generated default
+- at least one additional screenshot in `assets/`
 
 If they skip cover assets, the site can still publish the app with a default generated cover, but custom art makes the listing look much better.
 

@@ -55,6 +55,7 @@ If you prefer to register manually, you can do that first on the website:
 
 - Generates a compliant `manifest.json`
 - Generates or fills in a `README.md`
+- Generates default `assets/thumbnail.png` and `assets/icon.png`
 - Validates the package structure
 - Starts a local preview server before packaging or upload
 - Checks risky asset paths
@@ -99,6 +100,13 @@ python3 scripts/scaffold_mini_game.py \
   --name "Orbit Tap" \
   --description "A lightweight game about tapping planets on an orbit."
 ```
+
+Every scaffold now includes:
+
+- `assets/thumbnail.png`
+- `assets/icon.png`
+
+You can keep these generated PNG assets or replace them with your own cover art later.
 
 ### 1b. Scaffold an OCR / multimodal app
 

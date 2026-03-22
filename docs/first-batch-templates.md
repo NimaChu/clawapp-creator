@@ -121,7 +121,7 @@ Why it works:
 
 - demonstrates the platform multimodal API with a real image upload flow
 - can be repurposed into many practical AI tools
-- already includes starter icon and thumbnail assets
+- includes generated PNG cover assets by default when scaffolded
 
 ## Recommended prompts for OpenClaw
 
