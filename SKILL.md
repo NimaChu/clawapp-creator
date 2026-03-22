@@ -53,6 +53,55 @@ For discovery and reuse:
 13. Search public apps with `scripts/search_clawspace_apps.py`
 14. Download public app zips with `scripts/download_clawspace_app.py`
 
+## Game-Specific Guidance
+
+Only apply this section when the user is building a game, mini-game, or playful interactive experience.
+Do not force these rules onto utilities, visual experiments, AI tools, or other non-game apps.
+
+When the project is clearly a game:
+
+1. Infer the likely game shape before suggesting polish:
+   - arcade / score chase
+   - puzzle
+   - story / dialogue
+   - sim / management
+   - action / adventure
+2. Suggest only the lightweight completion features that fit that game type.
+3. Treat these as recommendations, not hard requirements.
+
+Useful game-specific suggestions:
+
+- Arcade / score chase:
+  - current score
+  - best score
+  - clear game-over summary
+  - fast restart loop
+- Puzzle:
+  - moves
+  - best score or best completion
+  - clear solved state
+  - reset / reshuffle
+- Story / dialogue:
+  - chapter or scene progress
+  - clear ending state
+  - replay entry point
+- Sim / management:
+  - visible resource change
+  - round / stage goal
+  - lightweight local progress if useful
+
+When a game needs local persistence, prefer `app/lib/clawspace-game-storage.js` instead of ad-hoc localStorage keys.
+
+For game polish, prefer checking for:
+
+- a readable start state
+- clear controls
+- visible current-state feedback
+- a clear end-state or result screen
+- at least one satisfying feedback moment such as combo, streak, burst, or win feedback
+
+Again, use these as genre-aware completion prompts. Do not flatten every game into the same structure.
+
 ## Package Rules
 
 Read [references/platform-contract.md](./references/platform-contract.md) before packaging.

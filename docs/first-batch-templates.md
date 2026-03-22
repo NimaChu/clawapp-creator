@@ -4,6 +4,14 @@ These are the first starter templates designed for CLAWSPACE creators and OpenCl
 
 All game-oriented starters now include a reusable helper at `app/lib/clawspace-game-storage.js`, so creators can persist best scores, best runs, or other lightweight progress with browser storage instead of rewriting localStorage logic each time.
 
+This helper is intentionally optional and genre-aware:
+
+- score chasers can store best score
+- puzzle games can store best completion or lowest moves
+- story games can store progress or endings if needed
+
+It should support variety, not force every game into the same loop.
+
 ## Design goals
 
 - fast to scaffold

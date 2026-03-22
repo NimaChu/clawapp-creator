@@ -69,6 +69,26 @@ If you prefer to register manually, you can do that first on the website:
 - Includes OCR / image-analysis starter support
 - Returns detail, launch, download, and share-ready links after upload
 
+## Game-Specific Completion Rules
+
+ClawApp Creator now applies an extra layer of guidance only when the user is making a game.
+It does not force the same structure onto utilities, visual experiments, or AI tools.
+
+For game projects, it should help OpenClaw think about:
+
+- what kind of game this is
+- which lightweight feedback or persistence fits that genre
+- what makes the first play session feel complete
+
+Examples:
+
+- arcade games: current score, best score, game-over summary, quick restart
+- puzzle games: moves, best completion, solved feedback, reset flow
+- story games: chapter progress, ending state, replay path
+- sim games: visible resource changes, stage goals, lightweight local persistence
+
+This is meant to improve completion quality without making every CLAWSPACE game feel the same.
+
 ## Main Files
 
 - `SKILL.md`: Main skill instructions
@@ -115,6 +135,7 @@ Every scaffold now includes default cover assets:
 You can keep the generated assets or replace them later with your own PNG, JPG, WebP, or SVG cover art.
 The scaffold no longer duplicates the same image into `screenshots` by default, which keeps starter packages lighter.
 Game starters also include a reusable local progress helper at `app/lib/clawspace-game-storage.js`, so mini-games can persist best scores or best runs with browser storage out of the box.
+For game projects, prefer that helper over ad-hoc localStorage keys, so score and progress storage stays predictable and reusable.
 For mobile shells such as WeChat Mini Program, PNG/JPG/WebP is recommended. If creators only provide SVG or skip custom art entirely, CLAWSPACE can fall back to default mobile-safe PNG covers.
 
 ### 1b. Scaffold an OCR / multimodal app
