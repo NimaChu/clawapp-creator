@@ -66,6 +66,7 @@ This keeps the default experience light while still leaving the full toolset ava
 - Supports both plaintext config storage and macOS Keychain storage
 - Helps choose between `none / text / multimodal / code` model categories
 - Includes OCR / image-analysis starter support
+- Can generate optional PNG cover assets for existing apps
 - Returns detail, launch, download, and share-ready links after upload
 
 ## Game-Specific Completion Rules
@@ -108,6 +109,7 @@ This matters even more for projects that may later appear in mobile shells such 
 - `scripts/check_environment.py`: Check whether the machine is ready to use the skill
 - `scripts/check_clawspace_account.py`: Verify which CLAWSPACE account the current saved config will use
 - `scripts/scaffold_mini_game.py`: Generate a mini-game scaffold
+- `scripts/generate_app_cover.py`: Generate optional `thumbnail.png` and `icon.png` assets for an existing app
 - `scripts/build_nima_package.py`: Build a platform zip package
 - `scripts/preview_clawspace_app.py`: Start a local preview server for a CLAWSPACE app
 - `scripts/register_clawspace_account.py`: Register a new account and save upload config
@@ -157,6 +159,23 @@ The scaffold no longer duplicates the same image into `screenshots` by default, 
 Game starters also include a reusable local progress helper at `app/lib/clawspace-game-storage.js`, so mini-games can persist best scores or best runs with browser storage out of the box.
 For game projects, prefer that helper over ad-hoc localStorage keys, so score and progress storage stays predictable and reusable.
 For mobile shells such as WeChat Mini Program, PNG/JPG/WebP is recommended. If creators only provide SVG or skip custom art entirely, CLAWSPACE can fall back to default mobile-safe PNG covers.
+
+### 1c. Generate a better PNG cover for an existing app
+
+Use this only when the app needs a stronger listing image. It is an optional polish pass, not part of the default path for every project.
+
+```bash
+python3 scripts/generate_app_cover.py /path/to/project
+```
+
+This generates:
+
+- `assets/thumbnail.png`
+- `assets/icon.png`
+
+And updates `manifest.json` to point at those files when the manifest lives at the project root.
+
+For a more custom flagship cover, you can still do a separate art pass with the [$svg-cover-generator](/Users/chunima/.codex/skills/svg-cover-generator/SKILL.md) skill and then export or replace `assets/thumbnail.png`.
 
 ### 1b. Scaffold an OCR / multimodal app
 

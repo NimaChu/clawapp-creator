@@ -52,6 +52,13 @@ Default to this path unless the user clearly needs setup or exploration:
 9. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
 10. Verify the detail page and launch page after upload.
 
+If the app clearly needs a stronger store listing image, you may insert one optional polish step before packaging:
+
+- run `scripts/generate_app_cover.py` to generate `assets/thumbnail.png` and `assets/icon.png`
+- or, for a more custom flagship cover, do a separate pass with [$svg-cover-generator](/Users/chunima/.codex/skills/svg-cover-generator/SKILL.md) and then replace `assets/thumbnail.png`
+
+Do not make this cover-generation pass mandatory for every app.
+
 ### 2. First-time setup
 
 Only enter this path when the user is brand-new, has no saved credentials, or wants to switch accounts:
@@ -220,6 +227,14 @@ python3 scripts/preview_clawspace_app.py /path/to/project --open
 ```
 
 This starts a lightweight local static server from the project root, reads `manifest.json`, and opens the packaged entry in the browser.
+
+If an existing app needs fresh PNG cover art before packaging, use:
+
+```bash
+python3 scripts/generate_app_cover.py /path/to/project
+```
+
+This is a lightweight polish step for listings. It should stay optional.
 
 Use:
 
