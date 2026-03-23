@@ -89,6 +89,20 @@ Examples:
 
 This is meant to improve completion quality without making every CLAWSPACE game feel the same.
 
+## Mobile Compatibility
+
+For user-facing apps and mini-games, ClawApp Creator should bias toward mobile-friendly output by default unless the project is clearly desktop-only.
+
+That means:
+
+- responsive layout on narrow screens
+- tap-friendly buttons and controls
+- no critical hover-only actions
+- touch input where it makes sense
+- usable portrait layouts unless the concept clearly depends on landscape
+
+This matters even more for projects that may later appear in mobile shells such as WeChat Mini Program.
+
 ## Main Files
 
 - `SKILL.md`: Main skill instructions

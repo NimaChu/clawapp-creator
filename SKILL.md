@@ -53,6 +53,26 @@ For discovery and reuse:
 13. Search public apps with `scripts/search_clawspace_apps.py`
 14. Download public app zips with `scripts/download_clawspace_app.py`
 
+## Mobile-First Guidance
+
+When the user is creating a user-facing front-end app or mini-game, default to mobile-friendly output unless they explicitly say desktop-only.
+
+In those cases, actively remind yourself to check:
+
+- the layout works on narrow screens
+- buttons and controls stay easy to tap
+- primary actions remain visible without hover
+- touch interaction exists where it makes sense for the app or game
+- the app still feels usable in portrait orientation unless the concept clearly requires landscape
+
+This guidance is meant for:
+
+- mini-games
+- interactive front-end apps
+- apps likely to be shared into mobile shells such as WeChat Mini Program
+
+Do not over-apply it to non-visual utilities, packaging-only tasks, or backend-only work.
+
 ## Game-Specific Guidance
 
 Only apply this section when the user is building a game, mini-game, or playful interactive experience.
@@ -116,6 +136,7 @@ Always enforce these minimum rules:
 - The scaffold now generates default cover assets automatically, so creators start with a usable listing without having to prepare custom art first.
 - The scaffold keeps starter packages lighter by generating `thumbnail.png` and `icon.png` without automatically duplicating them into `screenshots`.
 - Game starters now also include `app/lib/clawspace-game-storage.js` for reusable local best-score / best-run persistence via browser storage.
+- For user-facing apps and games, strongly prefer responsive layouts and touch-friendly controls so the package works well on phones as well as desktop browsers.
 - Default `modelCategory` to `none` unless the app truly needs AI.
 - Keep the zip at or under `25MB`.
 - Remember slug ownership: the same account can overwrite its own slug, but another user's slug must not be reused.

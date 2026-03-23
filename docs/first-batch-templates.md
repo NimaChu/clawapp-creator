@@ -19,6 +19,18 @@ It should support variety, not force every game into the same loop.
 - easy to package and upload
 - small enough to stay within the CLAWSPACE static-app model
 - clear fit for `none`, `text`, or `multimodal` model categories
+- mobile-friendly by default for user-facing front-end apps and games
+
+## Mobile baseline
+
+For this starter pack, assume creators will often preview and share these apps on phones.
+
+Each template should therefore aim for:
+
+- responsive narrow-screen layout
+- touch-friendly controls
+- no essential hover-only interaction
+- a solid first-run experience in portrait mode unless the genre clearly prefers landscape
 
 ## Template lineup
 
