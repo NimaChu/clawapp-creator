@@ -37,19 +37,18 @@ This verifies:
 - Keychain support on macOS
 - required skill files
 
-## First-Time Flow
+## Progressive Workflow
 
-For a first-time user, this is the smoothest path:
+ClawApp Creator is easiest to use when you think of it as three layers:
 
-1. Let ClawApp Creator register a CLAWSPACE account for you
-2. Save reusable upload credentials
-3. Package the app
-4. Run a dry-run check
-5. Upload and receive the detail, launch, and download links
+1. Main path
+   Create or adapt an app, preview it, package it, and publish it.
+2. First-time setup
+   Register an account, save upload credentials, and confirm which account is active.
+3. Extra tools
+   Search public apps, download zips, run dry-runs, or optimize images only when needed.
 
-If you prefer to register manually, you can do that first on the website:
-
-- [https://www.nima-tech.space/register](https://www.nima-tech.space/register)
+This keeps the default experience light while still leaving the full toolset available.
 
 ## What It Does
 
@@ -117,9 +116,16 @@ This matters even more for projects that may later appear in mobile shells such 
 - `references/platform-contract.md`: Packaging rules
 - `references/model-api.md`: Platform model API guide
 
-## Quick Start
+## Main Path
 
-### 0. Check your environment
+Most users should start here:
+
+1. Create or adapt the app
+2. Preview locally
+3. Build the package
+4. Upload
+
+### 0. Optional environment check
 
 ```bash
 python3 scripts/check_environment.py
@@ -127,7 +133,7 @@ python3 scripts/check_environment.py
 
 If this reports warnings, fix those first. It is the fastest way to confirm whether the skill is ready to run on a new machine.
 
-### 1. Scaffold a new mini-game
+### 1. Create a new mini-game
 
 ```bash
 python3 scripts/scaffold_mini_game.py \
@@ -167,7 +173,15 @@ This makes the default project storage path predictable for OpenClaw users:
 - each app gets its own folder named by slug
 - packaged zips and local preview flows can reuse that same folder directly
 
-### 2. Build a package
+### 2. Preview locally
+
+```bash
+python3 scripts/preview_clawspace_app.py /path/to/project --open
+```
+
+This starts a lightweight local static server, prints the preview URL, and can open the app in your browser automatically.
+
+### 3. Build a package
 
 ```bash
 python3 scripts/build_nima_package.py \
@@ -184,15 +198,31 @@ During build, ClawApp Creator now also checks cover and screenshot assets for:
 - oversized icon / thumbnail / screenshot images
 - SVG-only thumbnail setups that may need a mobile fallback
 
-### 2b. Preview locally before packaging
+### 4. Upload
 
 ```bash
-python3 scripts/preview_clawspace_app.py /path/to/project --open
+python3 scripts/upload_nima_package.py \
+  --package /path/to/output.zip \
+  --model-category none
 ```
 
-This starts a lightweight local static server, prints the preview URL, and can open the app in your browser automatically.
+If upload reaches the Blob step but then fails with a non-JSON error, the script now prints:
 
-### 3. Register a new CLAWSPACE account
+- HTTP status
+- response content type
+- a short response snippet
+
+That usually means the CLAWSPACE import finalize step returned an HTML error page (for example a timeout or platform error), not that your account credentials were wrong.
+
+## First-Time Setup
+
+Use this section only when the user has no CLAWSPACE account yet, or wants to change which account the uploader uses.
+
+If you prefer to register manually, you can do that first on the website:
+
+- [https://www.nima-tech.space/register](https://www.nima-tech.space/register)
+
+### 1. Register a new CLAWSPACE account
 
 ```bash
 python3 scripts/register_clawspace_account.py
@@ -217,7 +247,7 @@ python3 scripts/register_clawspace_account.py \
   --non-interactive
 ```
 
-### 4. Configure upload credentials for an existing account
+### 2. Configure upload credentials for an existing account
 
 ```bash
 python3 scripts/setup_upload_config.py
@@ -231,7 +261,7 @@ Default production site:
 https://www.nima-tech.space
 ```
 
-### 4b. Check which account is currently configured
+### 3. Check which account is currently configured
 
 ```bash
 python3 scripts/check_clawspace_account.py
@@ -239,7 +269,11 @@ python3 scripts/check_clawspace_account.py
 
 Use this before upload if you want to confirm which CLAWSPACE account the current config is bound to.
 
-### 5. Dry-run before upload
+## Extra Tools
+
+Use these only when the task really needs them.
+
+### 1. Dry-run before upload
 
 ```bash
 python3 scripts/upload_nima_package.py \
@@ -261,29 +295,13 @@ python3 scripts/upload_nima_package.py \
 
 That is especially useful when a package contains very large `thumbnail.png` or `icon.png` files that can make the server-side import finalize step fail.
 
-### 6. Upload
-
-```bash
-python3 scripts/upload_nima_package.py \
-  --package /path/to/output.zip \
-  --model-category none
-```
-
-If upload reaches the Blob step but then fails with a non-JSON error, the script now prints:
-
-- HTTP status
-- response content type
-- a short response snippet
-
-That usually means the CLAWSPACE import finalize step returned an HTML error page (for example a timeout or platform error), not that your account credentials were wrong.
-
-### 7. Search public apps on CLAWSPACE
+### 2. Search public apps on CLAWSPACE
 
 ```bash
 python3 scripts/search_clawspace_apps.py "ocr"
 ```
 
-### 8. Download a public app package
+### 3. Download a public app package
 
 ```bash
 python3 scripts/download_clawspace_app.py orbit-heist --out-dir /path/to/downloads

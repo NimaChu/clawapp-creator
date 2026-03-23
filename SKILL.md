@@ -35,23 +35,40 @@ Prefer asking this before you attempt upload-related commands.
 
 ## Workflow
 
-1. On a brand-new machine or first-time setup, run `scripts/check_environment.py` first when the user is unsure whether the skill is ready to use.
-2. Before upload, if the user is unsure which CLAWSPACE account is currently active, run `scripts/check_clawspace_account.py`.
-3. Confirm the app can be shipped as a static front-end.
-4. Build or fix the app until it outputs a static bundle.
-5. Decide whether the app needs a model.
-6. Generate a compliant `manifest.json`, optional `README.md`, and `assets/`.
-7. If there is no project yet, scaffold one with `scripts/scaffold_mini_game.py`.
-8. Preview locally with `scripts/preview_clawspace_app.py` when the user wants a browser check before package or upload.
-9. Package everything into a zip with `scripts/build_nima_package.py`.
-10. Diagnose with `scripts/diagnose_nima_package.py` before upload when helpful.
-11. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
-12. Verify the detail page and launch page after upload.
+Treat this as a progressive skill with three layers.
 
-For discovery and reuse:
+### 1. Main path
 
-13. Search public apps with `scripts/search_clawspace_apps.py`
-14. Download public app zips with `scripts/download_clawspace_app.py`
+Default to this path unless the user clearly needs setup or exploration:
+
+1. Confirm the app can be shipped as a static front-end.
+2. Build or fix the app until it outputs a static bundle.
+3. Decide whether the app needs a model.
+4. Generate a compliant `manifest.json`, optional `README.md`, and `assets/`.
+5. If there is no project yet, scaffold one with `scripts/scaffold_mini_game.py`.
+6. Preview locally with `scripts/preview_clawspace_app.py` when the user wants a browser check before package or upload.
+7. Package everything into a zip with `scripts/build_nima_package.py`.
+8. Diagnose with `scripts/diagnose_nima_package.py` before upload when helpful.
+9. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
+10. Verify the detail page and launch page after upload.
+
+### 2. First-time setup
+
+Only enter this path when the user is brand-new, has no saved credentials, or wants to switch accounts:
+
+1. Run `scripts/check_environment.py` when the machine setup is uncertain.
+2. Offer registration or manual website signup.
+3. Use `scripts/register_clawspace_account.py` for brand-new users.
+4. Use `scripts/setup_upload_config.py` for existing users.
+5. Use `scripts/check_clawspace_account.py` only when the active upload account is unclear.
+
+### 3. Extra tools
+
+Use these only when the user explicitly needs them:
+
+1. Search public apps with `scripts/search_clawspace_apps.py`
+2. Download public app zips with `scripts/download_clawspace_app.py`
+3. Use dry-run or image optimization when upload-specific validation is needed
 
 ## Mobile-First Guidance
 
