@@ -154,6 +154,8 @@ Every scaffold now includes default cover assets:
 - `assets/thumbnail.png`
 - `assets/icon.png`
 
+These generated covers are now split into stable per-app variants based on the slug, so two different projects in the same broad genre are much less likely to end up with identical listing art.
+
 You can keep the generated assets or replace them later with your own PNG, JPG, WebP, or SVG cover art.
 The scaffold no longer duplicates the same image into `screenshots` by default, which keeps starter packages lighter.
 Game starters also include a reusable local progress helper at `app/lib/clawspace-game-storage.js`, so mini-games can persist best scores or best runs with browser storage out of the box.
@@ -172,6 +174,8 @@ This generates:
 
 - `assets/thumbnail.png`
 - `assets/icon.png`
+
+The generated cover is deterministic for that app slug, but it also uses multiple built-in variants so similar apps do not all collapse to the exact same default image.
 
 And updates `manifest.json` to point at those files when the manifest lives at the project root.
 

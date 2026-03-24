@@ -158,6 +158,7 @@ Always enforce these minimum rules:
 - Keep package root flat: `manifest.json`, optional `README.md`, optional `assets/`, required `app/`.
 - Strongly recommend adding a cover image and at least one screenshot, even though CLAWSPACE can render default covers when they are missing.
 - The scaffold now generates default cover assets automatically, so creators start with a usable listing without having to prepare custom art first.
+- Those generated covers are now spread across stable slug-based variants, which reduces the chance that different apps end up with identical default listing art.
 - The scaffold keeps starter packages lighter by generating `thumbnail.png` and `icon.png` without automatically duplicating them into `screenshots`.
 - Game starters now also include `app/lib/clawspace-game-storage.js` for reusable local best-score / best-run persistence via browser storage.
 - For user-facing apps and games, strongly prefer responsive layouts and touch-friendly controls so the package works well on phones as well as desktop browsers.
@@ -235,6 +236,7 @@ python3 scripts/generate_app_cover.py /path/to/project
 ```
 
 This is a lightweight polish step for listings. It should stay optional.
+It now produces deterministic but varied cover outputs, so different apps in similar categories are less likely to share the exact same generated cover.
 
 Use:
 

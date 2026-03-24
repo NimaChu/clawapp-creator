@@ -7,10 +7,13 @@ from pathlib import Path
 
 from scaffold_mini_game import (
     TEMPLATE_PALETTES,
+    choose_cover_variant,
     create_icon_png,
     create_thumbnail_png,
     infer_art_direction,
     slugify,
+    stable_string_hash,
+    vary_palette,
 )
 
 
@@ -34,7 +37,7 @@ def pick_palette(manifest: dict, motif: str) -> dict[str, tuple[int, int, int]]:
         return TEMPLATE_PALETTES["orbit-tap"]
 
     palette_keys = list(TEMPLATE_PALETTES)
-    return TEMPLATE_PALETTES[palette_keys[hash(motif) % len(palette_keys)]]
+    return TEMPLATE_PALETTES[palette_keys[stable_string_hash(motif) % len(palette_keys)]]
 
 
 def load_manifest(project_dir: Path, manifest_path: Path | None) -> tuple[Path, dict]:
@@ -80,7 +83,8 @@ def main() -> None:
 
     slug = slugify(str(manifest.get("slug") or manifest.get("id") or project_dir.name))
     motif = args.motif or infer_art_direction("generic", slug)
-    palette = pick_palette(manifest, motif)
+    variant = choose_cover_variant("generic", slug, motif)
+    palette = vary_palette(pick_palette(manifest, motif), variant)
 
     thumbnail_path = assets_dir / "thumbnail.png"
     icon_path = assets_dir / "icon.png"
@@ -92,8 +96,8 @@ def main() -> None:
                 "refusing to overwrite existing assets without --force: " + ", ".join(existing)
             )
 
-    create_thumbnail_png(thumbnail_path, palette, motif)
-    create_icon_png(icon_path, palette, motif)
+    create_thumbnail_png(thumbnail_path, palette, motif, variant)
+    create_icon_png(icon_path, palette, motif, variant)
 
     manifest_updated = False
     if manifest.get("thumbnail") != "assets/thumbnail.png":
@@ -109,6 +113,7 @@ def main() -> None:
     print(f"Project: {project_dir}")
     print(f"Manifest: {manifest_path}")
     print(f"Motif: {motif}")
+    print(f"Variant: {variant + 1}")
     print(f"Generated: {thumbnail_path}")
     print(f"Generated: {icon_path}")
     if manifest_updated and manifest_path.parent == project_dir:

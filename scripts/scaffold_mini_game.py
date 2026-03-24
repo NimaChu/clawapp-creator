@@ -99,9 +99,40 @@ TEMPLATE_PALETTES = {
     },
 }
 
+COVER_VARIANT_COUNT = 5
+
 
 def slugify(value: str) -> str:
     return re.sub(r"^-+|-+$", "", re.sub(r"[^a-z0-9-]+", "-", value.strip().lower().replace("_", "-").replace(" ", "-")))
+
+
+def stable_string_hash(value: str) -> int:
+    total = 0
+    for index, char in enumerate(value):
+        total = (total * 131 + ord(char) + index) & 0xFFFFFFFF
+    return total
+
+
+def choose_cover_variant(template_name: str, slug: str, motif: str) -> int:
+    key = f"{template_name}:{slug}:{motif}"
+    return stable_string_hash(key) % COVER_VARIANT_COUNT
+
+
+def vary_palette(
+    palette: dict[str, tuple[int, int, int]],
+    variant: int,
+) -> dict[str, tuple[int, int, int]]:
+    if variant == 0:
+        return dict(palette)
+    strength = ((variant % COVER_VARIANT_COUNT) - 2) * 0.08
+    white = (250, 252, 255)
+    black = (8, 12, 24)
+    overlay = white if strength > 0 else black
+    factor = abs(strength)
+    return {
+        key: _blend(color, overlay, factor)
+        for key, color in palette.items()
+    }
 
 
 def replace_in_file(path: Path, replacements: dict[str, str]) -> None:
@@ -230,7 +261,7 @@ def write_png(path: Path, width: int, height: int, pixel_at) -> None:
     path.write_bytes(png)
 
 
-def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], motif: str) -> None:
+def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], motif: str, variant: int = 0) -> None:
     width, height = 1024, 576
     background = palette["background"]
     primary = palette["primary"]
@@ -241,43 +272,47 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], m
     lobster_cream = (255, 236, 222)
     lobster_gold = (255, 198, 103)
 
+    orbit_shift = (variant - 2) * width * 0.035
+    vertical_shift = (variant - 2) * height * 0.018
+    ring_shift = (variant - 2) * width * 0.01
+
     def pixel_at(x: int, y: int) -> bytes:
         vertical = y / max(1, height - 1)
         horizontal = x / max(1, width - 1)
         base = _blend(background, primary, vertical * 0.42)
         base = _blend(base, secondary, horizontal * 0.24)
 
-        dx1 = x - width * 0.28
-        dy1 = y - height * 0.34
+        dx1 = x - (width * 0.28 + orbit_shift)
+        dy1 = y - (height * 0.34 + vertical_shift)
         d1 = (dx1 * dx1 + dy1 * dy1) ** 0.5
         glow1 = max(0.0, 1.0 - d1 / (width * 0.22))
         if glow1 > 0:
             base = _blend(base, accent, glow1 * 0.72)
 
-        dx2 = x - width * 0.78
-        dy2 = y - height * 0.72
+        dx2 = x - (width * 0.78 - orbit_shift * 0.55)
+        dy2 = y - (height * 0.72 - vertical_shift * 0.7)
         d2 = (dx2 * dx2 + dy2 * dy2) ** 0.5
         glow2 = max(0.0, 1.0 - d2 / (width * 0.18))
         if glow2 > 0:
             base = _blend(base, white, glow2 * 0.38)
 
         if motif == "space-heist":
-            if _ring(x, y, width * 0.55, height * 0.58, width * 0.21, 3.0):
+            if _ring(x, y, width * 0.55, height * 0.58, width * 0.21 + ring_shift, 3.0):
                 base = _mix(base, white, 0.75)
-            if _circle(x, y, width * 0.28, height * 0.34, width * 0.075):
-                glow = max(0.0, 1.0 - math.hypot(x - width * 0.28, y - height * 0.34) / (width * 0.075))
+            if _circle(x, y, width * 0.28 + orbit_shift, height * 0.34 + vertical_shift, width * 0.075):
+                glow = max(0.0, 1.0 - math.hypot(x - (width * 0.28 + orbit_shift), y - (height * 0.34 + vertical_shift)) / (width * 0.075))
                 base = _mix(_blend(accent, white, 0.5), white, glow * 0.25)
-            if _circle(x, y, width * 0.68, height * 0.49, width * 0.09):
-                distance = math.hypot(x - width * 0.68, y - height * 0.49)
+            if _circle(x, y, width * 0.68 - orbit_shift * 0.5, height * 0.49 - vertical_shift * 0.4, width * 0.09):
+                distance = math.hypot(x - (width * 0.68 - orbit_shift * 0.5), y - (height * 0.49 - vertical_shift * 0.4))
                 shade = 1.0 - distance / (width * 0.09)
                 base = _mix(_blend(primary, secondary, 0.45), white, shade * 0.22)
             if _distance_to_segment(x, y, width * 0.48, height * 0.67, width * 0.58, height * 0.62) < 7 or _distance_to_segment(x, y, width * 0.58, height * 0.62, width * 0.55, height * 0.72) < 7:
                 base = _mix(base, accent, 0.82)
         elif motif == "cards":
             cards = [
-                (width * 0.22, height * 0.22, width * 0.42, height * 0.56, primary),
-                (width * 0.40, height * 0.28, width * 0.60, height * 0.62, secondary),
-                (width * 0.58, height * 0.22, width * 0.78, height * 0.56, accent),
+                (width * 0.22 + orbit_shift * 0.35, height * 0.22, width * 0.42 + orbit_shift * 0.35, height * 0.56, primary),
+                (width * 0.40, height * 0.28 + vertical_shift * 0.6, width * 0.60, height * 0.62 + vertical_shift * 0.6, secondary),
+                (width * 0.58 - orbit_shift * 0.35, height * 0.22, width * 0.78 - orbit_shift * 0.35, height * 0.56, accent),
             ]
             for left, top, right, bottom, color in cards:
                 if _rect(x, y, left, top, right, bottom):
@@ -286,7 +321,7 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], m
                 elif _rect(x, y, left - 4, top - 4, right + 4, bottom + 4):
                     base = _mix(base, white, 0.25)
         elif motif == "timer":
-            if _ring(x, y, width * 0.5, height * 0.48, width * 0.15, 12):
+            if _ring(x, y, width * 0.5, height * 0.48, width * 0.15 + ring_shift * 0.5, 12):
                 base = _mix(base, white, 0.72)
             if _distance_to_segment(x, y, width * 0.5, height * 0.48, width * 0.5, height * 0.37) < 8:
                 base = _mix(base, accent, 0.85)
@@ -312,7 +347,7 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], m
                 if _circle(x, y, cx, cy, 24):
                     base = _mix(color, white, 0.16)
         elif motif == "ocr":
-            if _rect(x, y, width * 0.27, height * 0.18, width * 0.73, height * 0.78):
+            if _rect(x, y, width * 0.27 + orbit_shift * 0.2, height * 0.18, width * 0.73 + orbit_shift * 0.2, height * 0.78):
                 base = _mix((242, 246, 255), white, 0.15)
             if _rect(x, y, width * 0.31, height * 0.28, width * 0.69, height * 0.31) or _rect(x, y, width * 0.31, height * 0.39, width * 0.63, height * 0.42):
                 base = _mix(base, primary, 0.65)
@@ -452,7 +487,7 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], m
     write_png(path, width, height, pixel_at)
 
 
-def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif: str) -> None:
+def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif: str, variant: int = 0) -> None:
     size = 384
     background = palette["background"]
     primary = palette["primary"]
@@ -462,6 +497,9 @@ def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif:
     lobster_shell = (255, 111, 83)
     lobster_cream = (255, 236, 222)
     lobster_gold = (255, 198, 103)
+
+    orbit_shift = (variant - 2) * size * 0.026
+    ring_shift = (variant - 2) * size * 0.008
 
     def pixel_at(x: int, y: int) -> bytes:
         horizontal = x / max(1, size - 1)
@@ -476,17 +514,17 @@ def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif:
         distance = (dx * dx + dy * dy) ** 0.5
 
         if motif == "space-heist":
-            if _ring(x, y, center_x, center_y, size * 0.26, 8):
+            if _ring(x, y, center_x, center_y, size * 0.26 + ring_shift, 8):
                 base = _mix(base, white, 0.68)
-            if _circle(x, y, size * 0.36, size * 0.36, size * 0.08):
+            if _circle(x, y, size * 0.36 + orbit_shift, size * 0.36, size * 0.08):
                 base = _mix(accent, white, 0.22)
             if _distance_to_segment(x, y, size * 0.48, size * 0.64, size * 0.62, size * 0.54) < 9 or _distance_to_segment(x, y, size * 0.62, size * 0.54, size * 0.59, size * 0.68) < 9:
                 base = _mix(base, accent, 0.86)
         elif motif == "cards":
             for left, top, right, bottom, color in [
-                (size * 0.18, size * 0.18, size * 0.42, size * 0.54, primary),
+                (size * 0.18 + orbit_shift * 0.45, size * 0.18, size * 0.42 + orbit_shift * 0.45, size * 0.54, primary),
                 (size * 0.36, size * 0.24, size * 0.60, size * 0.60, secondary),
-                (size * 0.54, size * 0.18, size * 0.78, size * 0.54, accent),
+                (size * 0.54 - orbit_shift * 0.45, size * 0.18, size * 0.78 - orbit_shift * 0.45, size * 0.54, accent),
             ]:
                 if _rect(x, y, left, top, right, bottom):
                     base = _mix(color, white, 0.16)
@@ -620,10 +658,11 @@ def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif:
 def create_default_assets(assets_dir: Path, template_name: str, slug: str = "") -> tuple[str, str]:
     thumbnail_path = assets_dir / "thumbnail.png"
     icon_path = assets_dir / "icon.png"
-    palette = TEMPLATE_PALETTES[template_name]
     motif = infer_art_direction(template_name, slug)
-    create_thumbnail_png(thumbnail_path, palette, motif)
-    create_icon_png(icon_path, palette, motif)
+    variant = choose_cover_variant(template_name, slug, motif)
+    palette = vary_palette(TEMPLATE_PALETTES[template_name], variant)
+    create_thumbnail_png(thumbnail_path, palette, motif, variant)
+    create_icon_png(icon_path, palette, motif, variant)
     return "assets/thumbnail.png", "assets/icon.png"
 
 
