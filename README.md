@@ -12,6 +12,23 @@ Production platform:
 - Website: [https://www.nima-tech.space](https://www.nima-tech.space)
 - Skill on ClawHub: [https://clawhub.ai/NimaChu/clawapp-creator](https://clawhub.ai/NimaChu/clawapp-creator)
 
+## Site Download Sync
+
+This repo includes a GitHub Actions workflow that can keep the website download copy in sync:
+
+- workflow: `.github/workflows/sync-site-download.yml`
+- target file in the site repo: `public/downloads/clawapp-creator.zip`
+
+To enable it, add a repository secret in `clawapp-creator`:
+
+- `NIMA_SITE_SYNC_TOKEN`
+
+That token needs permission to push to:
+
+- `NimaChu/nima-tech-space`
+
+Once the secret is configured, every push to `main` in this repo can refresh the website-hosted download zip automatically.
+
 ## Requirements
 
 ClawApp Creator is close to out-of-the-box for most users, because it does not require extra Python packages.
