@@ -177,6 +177,7 @@ You can keep the generated assets or replace them later with your own PNG, JPG, 
 The scaffold no longer duplicates the same image into `screenshots` by default, which keeps starter packages lighter.
 Game starters also include a reusable local progress helper at `app/lib/clawspace-game-storage.js`, so mini-games can persist best scores or best runs with browser storage out of the box.
 For game projects, prefer that helper over ad-hoc localStorage keys, so score and progress storage stays predictable and reusable.
+When the player is logged into CLAWSPACE, that helper can also sync a personal best score and read the global best score from the site API.
 For mobile shells such as WeChat Mini Program, PNG/JPG/WebP is recommended. If creators only provide SVG or skip custom art entirely, CLAWSPACE can fall back to default mobile-safe PNG covers.
 
 ### 1c. Generate a better PNG cover for an existing app

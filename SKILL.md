@@ -161,6 +161,7 @@ Always enforce these minimum rules:
 - Those generated covers are now spread across stable slug-based variants, which reduces the chance that different apps end up with identical default listing art.
 - The scaffold keeps starter packages lighter by generating `thumbnail.png` and `icon.png` without automatically duplicating them into `screenshots`.
 - Game starters now also include `app/lib/clawspace-game-storage.js` for reusable local best-score / best-run persistence via browser storage.
+- When the player is logged in, that helper can also sync personal best score to the CLAWSPACE account and read the current global best score from the site API.
 - For user-facing apps and games, strongly prefer responsive layouts and touch-friendly controls so the package works well on phones as well as desktop browsers.
 - Default `modelCategory` to `none` unless the app truly needs AI.
 - Keep the zip at or under `25MB`.

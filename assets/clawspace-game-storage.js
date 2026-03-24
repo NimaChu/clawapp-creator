@@ -56,10 +56,96 @@ export function createGameStorage(namespace) {
     storage.removeItem(prefix + key);
   }
 
+  async function fetchRemoteSummary(key, fallback = 0) {
+    try {
+      const response = await fetch(`/api/game-scores?appId=${encodeURIComponent(namespace)}`, {
+        credentials: 'same-origin',
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return {
+          authenticated: false,
+          localBest: getNumber(key, fallback),
+          userBest: null,
+          globalBest: null,
+          error: data?.error || 'score-summary-failed',
+        };
+      }
+      return {
+        authenticated: Boolean(data?.authenticated),
+        localBest: getNumber(key, fallback),
+        userBest: data?.userBest || null,
+        globalBest: data?.globalBest || null,
+        error: '',
+      };
+    } catch (error) {
+      return {
+        authenticated: false,
+        localBest: getNumber(key, fallback),
+        userBest: null,
+        globalBest: null,
+        error: error instanceof Error ? error.message : 'score-summary-failed',
+      };
+    }
+  }
+
+  async function syncBestScore(key, candidate, options = {}) {
+    const fallback = normalizeNumber(options.fallback, 0);
+    const localBest = updateBest(key, candidate, { mode: 'max', fallback });
+    const summary = await fetchRemoteSummary(key, fallback);
+
+    if (!summary.authenticated) {
+      return {
+        authenticated: false,
+        localBest,
+        userBest: null,
+        globalBest: summary.globalBest,
+      };
+    }
+
+    try {
+      const response = await fetch(`/api/game-scores?appId=${encodeURIComponent(namespace)}`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ score: localBest }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return {
+          authenticated: true,
+          localBest,
+          userBest: summary.userBest,
+          globalBest: summary.globalBest,
+          error: data?.error || 'score-submit-failed',
+        };
+      }
+      return {
+        authenticated: true,
+        localBest,
+        userBest: data?.userBest || null,
+        globalBest: data?.globalBest || null,
+        error: '',
+      };
+    } catch (error) {
+      return {
+        authenticated: true,
+        localBest,
+        userBest: summary.userBest,
+        globalBest: summary.globalBest,
+        error: error instanceof Error ? error.message : 'score-submit-failed',
+      };
+    }
+  }
+
   return {
     getNumber,
     setNumber,
     updateBest,
     clear,
+    fetchRemoteSummary,
+    syncBestScore,
   };
 }
