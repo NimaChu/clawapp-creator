@@ -9,6 +9,20 @@ Build the smallest working app package that can be uploaded to Nima Tech Space, 
 
 This skill can also search public apps on CLAWSPACE and download app packages from the site.
 
+## Live Reference Apps
+
+Besides starter templates, use strong live CLAWSPACE apps as reference patterns when they help:
+
+- `gravity-surfer` for score-driven arcade loops, strong feedback, and visible best-score structure
+- `starship-deep-space` for touch-friendly action UI that still works on desktop
+- `orbit-heist` for flagship-feeling arcade polish and responsive playfield framing
+- `classic-tank-game` for simple mobile-friendly action loops with broad accessibility
+- `comeback-project` for practical text-model utility flows
+- `online-ocr-tool` for multimodal upload + OCR integration
+
+Do not clone these apps directly.
+Use them as signals for what tends to work well on CLAWSPACE.
+
 ## Publish Mode
 
 Treat the following requests as a direct publish workflow:

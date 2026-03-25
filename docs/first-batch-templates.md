@@ -37,6 +37,25 @@ Each template should therefore aim for:
 
 ## Template lineup
 
+## Strong live references
+
+These starters are not the only useful examples anymore. On the live platform, several higher-star apps now act as better quality references:
+
+- `gravity-surfer`
+  - reference for score-chasing arcade polish, momentum, and best-score presentation
+- `starship-deep-space`
+  - reference for mobile-friendly shooter UI and action readability
+- `orbit-heist`
+  - reference for flagship arcade framing, cover polish, and responsive game composition
+- `classic-tank-game`
+  - reference for simple controls and familiar action loops that still work well on phones
+- `comeback-project`
+  - reference for focused AI utility UX
+- `online-ocr-tool`
+  - reference for multimodal OCR flow and image-analysis product framing
+
+Use these as reality checks when deciding whether a starter still feels too bare.
+
 ### 1. `orbit-tap`
 
 Type:

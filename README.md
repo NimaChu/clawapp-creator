@@ -86,6 +86,35 @@ This keeps the default experience light while still leaving the full toolset ava
 - Can generate optional PNG cover assets for existing apps
 - Returns detail, launch, download, and share-ready links after upload
 
+## Live Reference Cases
+
+The skill already has starter templates, but the stronger references now come from real CLAWSPACE apps that earned stars on the live platform.
+
+Useful patterns to keep in mind:
+
+- `gravity-surfer`
+  - score-driven arcade game
+  - strong moment-to-moment feedback
+  - works well as a reference for local/account best + global best score loops
+- `starship-deep-space`
+  - mobile-friendly action shooter
+  - good reference for touch-first combat UI that still reads well on desktop
+- `orbit-heist`
+  - polished HTML5 arcade / stealth structure
+  - good reference for a flagship-feeling game loop, cover quality, and responsive playfield framing
+- `classic-tank-game`
+  - simple action game with broad appeal
+  - good reminder that familiar mechanics plus mobile controls can still perform well
+- `comeback-project`
+  - AI utility with a clear single-purpose workflow
+  - good reference for text-model apps that feel practical rather than experimental
+- `online-ocr-tool`
+  - multimodal OCR tool
+  - good reference for image upload flows and correct platform multimodal integration
+
+These should be treated as live reference patterns, not rigid templates.
+They are useful for asking: what does a starred CLAWSPACE app usually get right in feedback, polish, input flow, and first-screen clarity?
+
 ## Game-Specific Completion Rules
 
 ClawApp Creator now applies an extra layer of guidance only when the user is making a game.
