@@ -105,6 +105,7 @@ Examples:
 - sim games: visible resource changes, stage goals, lightweight local persistence
 
 This is meant to improve completion quality without making every CLAWSPACE game feel the same.
+It should still leave room for different pacing, framing, and visual style, while nudging game UIs toward something that feels natural on both desktop and phone screens.
 
 ## Mobile Compatibility
 
@@ -117,6 +118,8 @@ That means:
 - no critical hover-only actions
 - touch input where it makes sense
 - usable portrait layouts unless the concept clearly depends on landscape
+- for games and other interactive experiences, the opening mobile view should ideally expose the main action without forcing the user to scroll first
+- for games, prefer one responsive UI that works on both mobile and desktop rather than making one side feel like a stretched fallback
 
 This matters even more for projects that may later appear in mobile shells such as WeChat Mini Program.
 

@@ -88,6 +88,8 @@ In those cases, actively remind yourself to check:
 - primary actions remain visible without hover
 - touch interaction exists where it makes sense for the app or game
 - the app still feels usable in portrait orientation unless the concept clearly requires landscape
+- the first screen should ideally expose the main action or core play loop without requiring immediate scrolling
+- when the project is a game, prefer a single responsive UI that still feels good on both desktop and mobile instead of treating one platform as an afterthought
 
 This guidance is meant for:
 
@@ -112,6 +114,7 @@ When the project is clearly a game:
    - action / adventure
 2. Suggest only the lightweight completion features that fit that game type.
 3. Treat these as recommendations, not hard requirements.
+4. When discussing layout, encourage the game UI to work for both desktop and mobile by default unless the concept clearly depends on one format.
 
 Useful game-specific suggestions:
 
@@ -143,6 +146,8 @@ For game polish, prefer checking for:
 - visible current-state feedback
 - a clear end-state or result screen
 - at least one satisfying feedback moment such as combo, streak, burst, or win feedback
+- a mobile opening view that exposes the core interaction quickly, without making the player scroll before they can understand or start playing
+- a desktop layout that gains breathing room or richer framing without changing the core interaction model
 
 Again, use these as genre-aware completion prompts. Do not flatten every game into the same structure.
 
