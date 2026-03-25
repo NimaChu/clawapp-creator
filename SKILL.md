@@ -49,8 +49,9 @@ Default to this path unless the user clearly needs setup or exploration:
 6. Preview locally with `scripts/preview_clawspace_app.py` when the user wants a browser check before package or upload.
 7. Package everything into a zip with `scripts/build_nima_package.py`.
 8. Diagnose with `scripts/diagnose_nima_package.py` before upload when helpful.
-9. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
-10. Verify the detail page and launch page after upload.
+9. If the project is a game, run `scripts/check_game_readiness.py` before upload.
+10. Upload with `scripts/upload_nima_package.py` when the user wants publishing.
+11. Verify the detail page and launch page after upload.
 
 If the app clearly needs a stronger store listing image, you may insert one optional polish step before packaging:
 
@@ -90,6 +91,8 @@ In those cases, actively remind yourself to check:
 - the app still feels usable in portrait orientation unless the concept clearly requires landscape
 - the first screen should ideally expose the main action or core play loop without requiring immediate scrolling
 - when the project is a game, prefer a single responsive UI that still feels good on both desktop and mobile instead of treating one platform as an afterthought
+- use common tall-phone layouts such as 19.5:9 or 20:9 as a practical mental check
+- when the project is a game, think of HUD, playfield, and bottom controls as one shared vertical budget instead of letting the HUD grow until the game board gets squeezed
 
 This guidance is meant for:
 
@@ -121,6 +124,7 @@ Useful game-specific suggestions:
 - Arcade / score chase:
   - current score
   - best score
+  - platform/global best score shown separately when score competition matters
   - clear game-over summary
   - fast restart loop
 - Puzzle:
@@ -138,6 +142,8 @@ Useful game-specific suggestions:
   - lightweight local progress if useful
 
 When a game needs local persistence, prefer `app/lib/clawspace-game-storage.js` instead of ad-hoc localStorage keys.
+For score-driven games, keep local/account best and platform/global best as separate fields.
+When platform score sync is available, fetch it on load and degrade cleanly when the player is not logged in.
 
 For game polish, prefer checking for:
 
@@ -148,6 +154,17 @@ For game polish, prefer checking for:
 - at least one satisfying feedback moment such as combo, streak, burst, or win feedback
 - a mobile opening view that exposes the core interaction quickly, without making the player scroll before they can understand or start playing
 - a desktop layout that gains breathing room or richer framing without changing the core interaction model
+- a pause / restart path when the game loop benefits from it
+
+Before publishing a score-driven game, strongly prefer checking:
+
+- local best is visible
+- platform/global best is visible
+- `/api/game-scores` is actually wired
+- start / pause / restart or an equivalent closed loop exists
+- touch controls work on mobile
+- an end-state or failure-state is visible
+- score feedback is readable during play
 
 Again, use these as genre-aware completion prompts. Do not flatten every game into the same structure.
 
@@ -273,6 +290,25 @@ This checks:
 - manifest presence
 - likely external model key usage
 - whether `modelCategory` looks more suitable as `none`, `text`, `multimodal`, or `code`
+
+For game-specific readiness, use:
+
+```bash
+python3 scripts/check_game_readiness.py \
+  --html /path/to/app/index.html \
+  --js /path/to/app/main.js \
+  --css /path/to/app/styles.css
+```
+
+This checks:
+
+- whether local best is visible
+- whether platform/global best is visible
+- whether `/api/game-scores` appears to be wired
+- whether a touch/pointer interaction path exists
+- whether an end-state or replay loop exists
+- whether viewport and mobile-height hints are present
+- whether optional testing hooks such as `window.render_game_to_text` and `window.advanceTime(ms)` exist
 
 ## Uploading
 

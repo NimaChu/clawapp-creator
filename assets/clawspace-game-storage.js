@@ -26,6 +26,23 @@ function normalizeNumber(value, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function normalizeScoreEntry(entry) {
+  if (entry == null) {
+    return null;
+  }
+  if (typeof entry === 'number') {
+    return { score: normalizeNumber(entry, 0), userName: '', updatedAt: '' };
+  }
+  if (typeof entry === 'object') {
+    return {
+      score: normalizeNumber(entry.score, 0),
+      userName: typeof entry.userName === 'string' ? entry.userName : '',
+      updatedAt: typeof entry.updatedAt === 'string' ? entry.updatedAt : '',
+    };
+  }
+  return null;
+}
+
 export function createGameStorage(namespace) {
   const storage = getStorage();
   const prefix = `clawspace:${namespace}:`;
@@ -74,8 +91,8 @@ export function createGameStorage(namespace) {
       return {
         authenticated: Boolean(data?.authenticated),
         localBest: getNumber(key, fallback),
-        userBest: data?.userBest || null,
-        globalBest: data?.globalBest || null,
+        userBest: normalizeScoreEntry(data?.userBest),
+        globalBest: normalizeScoreEntry(data?.globalBest),
         error: '',
       };
     } catch (error) {
@@ -117,26 +134,26 @@ export function createGameStorage(namespace) {
         return {
           authenticated: true,
           localBest,
-          userBest: summary.userBest,
-          globalBest: summary.globalBest,
+          userBest: normalizeScoreEntry(summary.userBest),
+          globalBest: normalizeScoreEntry(summary.globalBest),
           error: data?.error || 'score-submit-failed',
         };
       }
       return {
         authenticated: true,
         localBest,
-        userBest: data?.userBest || null,
-        globalBest: data?.globalBest || null,
+        userBest: normalizeScoreEntry(data?.userBest),
+        globalBest: normalizeScoreEntry(data?.globalBest),
         error: '',
       };
     } catch (error) {
-      return {
-        authenticated: true,
-        localBest,
-        userBest: summary.userBest,
-        globalBest: summary.globalBest,
-        error: error instanceof Error ? error.message : 'score-submit-failed',
-      };
+        return {
+          authenticated: true,
+          localBest,
+          userBest: normalizeScoreEntry(summary.userBest),
+          globalBest: normalizeScoreEntry(summary.globalBest),
+          error: error instanceof Error ? error.message : 'score-submit-failed',
+        };
     }
   }
 
@@ -147,5 +164,6 @@ export function createGameStorage(namespace) {
     clear,
     fetchRemoteSummary,
     syncBestScore,
+    normalizeScoreEntry,
   };
 }

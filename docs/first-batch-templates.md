@@ -33,6 +33,7 @@ Each template should therefore aim for:
 - a solid first-run experience in portrait mode unless the genre clearly prefers landscape
 - for games, a first screen that exposes the core play loop quickly instead of making the player scroll before they can begin
 - for game UI, one responsive layout that still feels intentional on both desktop and mobile, rather than a mobile-only or desktop-only composition by accident
+- for score-driven games, separate local/account best from platform/global best in the HUD or result layer instead of compressing them into one stat
 
 ## Template lineup
 

@@ -106,6 +106,7 @@ Examples:
 
 This is meant to improve completion quality without making every CLAWSPACE game feel the same.
 It should still leave room for different pacing, framing, and visual style, while nudging game UIs toward something that feels natural on both desktop and phone screens.
+For score-driven games, local or account best and platform/global best should stay visibly separate instead of collapsing into one score field.
 
 ## Mobile Compatibility
 
@@ -120,6 +121,8 @@ That means:
 - usable portrait layouts unless the concept clearly depends on landscape
 - for games and other interactive experiences, the opening mobile view should ideally expose the main action without forcing the user to scroll first
 - for games, prefer one responsive UI that works on both mobile and desktop rather than making one side feel like a stretched fallback
+- use common tall-phone viewports such as 19.5:9 and 20:9 as practical checks
+- for games, budget HUD, playfield, and bottom controls together so the HUD does not accidentally squeeze the game board out of a comfortable mobile view
 
 This matters even more for projects that may later appear in mobile shells such as WeChat Mini Program.
 
@@ -131,6 +134,7 @@ This matters even more for projects that may later appear in mobile shells such 
 - `scripts/scaffold_mini_game.py`: Generate a mini-game scaffold
 - `scripts/generate_app_cover.py`: Generate optional `thumbnail.png` and `icon.png` assets for an existing app
 - `scripts/build_nima_package.py`: Build a platform zip package
+- `scripts/check_game_readiness.py`: Verify game-specific readiness, platform-score wiring, and mobile-first basics
 - `scripts/preview_clawspace_app.py`: Start a local preview server for a CLAWSPACE app
 - `scripts/register_clawspace_account.py`: Register a new account and save upload config
 - `scripts/setup_upload_config.py`: Configure credentials for an existing account
@@ -181,6 +185,7 @@ The scaffold no longer duplicates the same image into `screenshots` by default, 
 Game starters also include a reusable local progress helper at `app/lib/clawspace-game-storage.js`, so mini-games can persist best scores or best runs with browser storage out of the box.
 For game projects, prefer that helper over ad-hoc localStorage keys, so score and progress storage stays predictable and reusable.
 When the player is logged into CLAWSPACE, that helper can also sync a personal best score and read the global best score from the site API.
+For score-driven games, show those values separately: local/account best is not the same thing as the platform global best.
 For mobile shells such as WeChat Mini Program, PNG/JPG/WebP is recommended. If creators only provide SVG or skip custom art entirely, CLAWSPACE can fall back to default mobile-safe PNG covers.
 
 ### 1c. Generate a better PNG cover for an existing app
@@ -241,6 +246,25 @@ During build, ClawApp Creator now also checks cover and screenshot assets for:
 - zero-byte files
 - oversized icon / thumbnail / screenshot images
 - SVG-only thumbnail setups that may need a mobile fallback
+
+For game-specific readiness checks, use:
+
+```bash
+python3 scripts/check_game_readiness.py \
+  --html /path/to/app/index.html \
+  --js /path/to/app/main.js \
+  --css /path/to/app/styles.css
+```
+
+This is especially useful for score-driven games because it checks for:
+
+- local best display
+- platform/global best display
+- `/api/game-scores` wiring
+- touch or pointer interaction
+- end-state / replay flow
+- viewport and mobile-height hints
+- optional testing hooks like `window.render_game_to_text` and `window.advanceTime(ms)`
 
 ### 4. Upload
 
