@@ -34,9 +34,15 @@ function normalizeScoreEntry(entry) {
     return { score: normalizeNumber(entry, 0), userName: '', updatedAt: '' };
   }
   if (typeof entry === 'object') {
+    const userName =
+      typeof entry.userName === 'string'
+        ? entry.userName
+        : typeof entry.displayName === 'string'
+          ? entry.displayName
+          : '';
     return {
       score: normalizeNumber(entry.score, 0),
-      userName: typeof entry.userName === 'string' ? entry.userName : '',
+      userName,
       updatedAt: typeof entry.updatedAt === 'string' ? entry.updatedAt : '',
     };
   }

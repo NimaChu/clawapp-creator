@@ -57,6 +57,23 @@ def run_curl_json(command: list[str], error_message: str) -> dict:
     return payload
 
 
+def try_curl_json(command: list[str]) -> tuple[dict | None, str]:
+    result = subprocess.run(command, check=False, capture_output=True, text=True)
+    if result.returncode != 0:
+        return None, result.stderr.strip() or "curl request failed"
+
+    output = result.stdout
+    try:
+        payload = json.loads(output)
+    except json.JSONDecodeError:
+        return None, output.strip() or "invalid JSON response"
+
+    if not isinstance(payload, dict):
+        return None, "response must be a JSON object"
+
+    return payload, ""
+
+
 def sanitize_blob_pathname(filename: str) -> str:
     safe_name = re.sub(r"[^a-zA-Z0-9._-]+", "-", filename)
     return f"package-uploads/{safe_name}"
@@ -184,6 +201,38 @@ def upload_via_blob(site_url: str, cookie_path: Path, package_path: Path) -> dic
         raise SystemExit("Blob upload did not return url/pathname")
 
     return upload_payload
+
+
+def finalize_blob_import(site_url: str, cookie_path: Path, blob_upload: dict, model_category: str) -> dict:
+    return run_curl_json([
+        "curl",
+        "-sS",
+        "-b",
+        str(cookie_path),
+        "-H",
+        "Content-Type: application/json",
+        "-d",
+        json.dumps({
+            "blobUrl": blob_upload["url"],
+            "blobPathname": blob_upload["pathname"],
+            "modelCategory": model_category,
+        }),
+        f"{site_url}/api/import-app",
+    ], "upload finalize failed")
+
+
+def upload_direct(site_url: str, cookie_path: Path, package_path: Path, model_category: str) -> tuple[dict | None, str]:
+    return try_curl_json([
+        "curl",
+        "-sS",
+        "-b",
+        str(cookie_path),
+        "-F",
+        f"package=@{package_path}",
+        "-F",
+        f"modelCategory={model_category}",
+        f"{site_url}/api/import-app",
+    ])
 
 
 def load_config(path: Path) -> dict:
@@ -346,34 +395,22 @@ def main() -> None:
             blob_upload = upload_via_blob(base_url, cookie_path, package_path)
             done("Blob upload finished")
             stage("Finalizing import")
-            upload_payload = run_curl_json([
-                "curl",
-                "-sS",
-                "-b",
-                str(cookie_path),
-                "-H",
-                "Content-Type: application/json",
-                "-d",
-                json.dumps({
-                    "blobUrl": blob_upload["url"],
-                    "blobPathname": blob_upload["pathname"],
-                    "modelCategory": resolved_model_category,
-                }),
-                f"{base_url}/api/import-app",
-            ], "upload finalize failed")
+            upload_payload = finalize_blob_import(base_url, cookie_path, blob_upload, resolved_model_category)
         else:
             stage("Uploading package directly")
-            upload_payload = run_curl_json([
-                "curl",
-                "-sS",
-                "-b",
-                str(cookie_path),
-                "-F",
-                f"package=@{package_path}",
-                "-F",
-                f"modelCategory={resolved_model_category}",
-                f"{base_url}/api/import-app",
-            ], "upload failed")
+            upload_payload, direct_error = upload_direct(base_url, cookie_path, package_path, resolved_model_category)
+            if upload_payload is None:
+                print(
+                    "Notice: direct upload failed or returned a non-JSON response. "
+                    "Falling back to Blob upload automatically.",
+                    file=sys.stderr,
+                )
+                print(f"Direct upload detail: {direct_error}", file=sys.stderr)
+                stage("Uploading fallback package via Blob")
+                blob_upload = upload_via_blob(base_url, cookie_path, package_path)
+                done("Blob upload finished")
+                stage("Finalizing import")
+                upload_payload = finalize_blob_import(base_url, cookie_path, blob_upload, resolved_model_category)
         done("Upload finished")
 
         if not upload_payload.get("success"):

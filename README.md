@@ -281,6 +281,13 @@ If upload reaches the Blob step but then fails with a non-JSON error, the script
 - a short response snippet
 
 That usually means the CLAWSPACE import finalize step returned an HTML error page (for example a timeout or platform error), not that your account credentials were wrong.
+For packages near the upload threshold, ClawApp Creator now also falls back automatically:
+
+- it tries direct upload first for smaller packages
+- if direct upload fails or returns a non-JSON response, it automatically retries with Blob upload
+- larger packages still go to Blob first
+
+This keeps creators from having to manually guess which upload path will behave better.
 
 ## First-Time Setup
 

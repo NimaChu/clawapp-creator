@@ -77,6 +77,7 @@ Use these only when the user explicitly needs them:
 1. Search public apps with `scripts/search_clawspace_apps.py`
 2. Download public app zips with `scripts/download_clawspace_app.py`
 3. Use dry-run or image optimization when upload-specific validation is needed
+4. Remember that upload now prefers direct form upload for small packages but automatically falls back to Blob if the direct path fails
 
 ## Mobile-First Guidance
 
