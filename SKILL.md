@@ -69,11 +69,13 @@ Default to this path unless the user clearly needs setup or exploration:
 
 If the app clearly needs a stronger store listing image, you may insert one optional polish step before packaging:
 
-- run `scripts/generate_app_cover.py` to generate `assets/thumbnail.png` and `assets/icon.png`
-- or, for a more custom flagship cover, do a separate pass with [$svg-cover-generator](/Users/chunima/.codex/skills/svg-cover-generator/SKILL.md) and then replace `assets/thumbnail.png`
+- if the project has no usable cover yet, run `scripts/generate_app_cover.py` to generate a fallback `assets/thumbnail.png` and `assets/icon.png`
+- if the app needs a real content-fitting cover, do a separate design pass based on the app's actual concept, then replace `assets/thumbnail.png`
+- for a custom flagship cover, prefer a separate pass with [$svg-cover-generator](/Users/chunima/.codex/skills/svg-cover-generator/SKILL.md) or another explicit content-driven design step
 
 Do not make this cover-generation pass mandatory for every app.
 Treat `generate_app_cover.py` as a standalone cover tool for existing projects, not as something that only works for scaffolded apps.
+Treat its output as a safe fallback, not as the default ideal cover for visually important apps.
 
 ### 2. First-time setup
 
@@ -194,8 +196,8 @@ Always enforce these minimum rules:
 - Put built files under `app/`.
 - Keep the entry file inside `app/`, usually `app/index.html`.
 - Keep package root flat: `manifest.json`, optional `README.md`, optional `assets/`, required `app/`.
-- Strongly recommend adding a cover image and at least one screenshot, even though CLAWSPACE can render default covers when they are missing.
-- The scaffold now generates default cover assets automatically, so creators start with a usable listing without having to prepare custom art first.
+- Strongly recommend adding a cover image and at least one screenshot, even though CLAWSPACE can render fallback covers when they are missing.
+- The scaffold now generates fallback cover assets automatically, so creators start with a usable listing without having to prepare custom art first.
 - Those generated covers are now spread across a larger set of stable slug-based variants and broader motif families, which reduces the chance that different apps end up with identical default listing art.
 - The scaffold keeps starter packages lighter by generating `thumbnail.png` and `icon.png` without automatically duplicating them into `screenshots`.
 - Game starters now also include `app/lib/clawspace-game-storage.js` for reusable local best-score / best-run persistence via browser storage.
@@ -274,8 +276,10 @@ If an existing app needs fresh PNG cover art before packaging, use:
 python3 scripts/generate_app_cover.py /path/to/project
 ```
 
-This is a lightweight polish step for listings. It should stay optional.
-It now produces deterministic but more varied cover outputs, and it can run directly on an existing app project without depending on scaffolded template files.
+This is a lightweight fallback step for listings. It should stay optional.
+It now produces deterministic but more varied fallback outputs, and it can run directly on an existing app project without depending on scaffolded template files.
+Do not mistake that for true bespoke cover design.
+If the app is visually important, the agent should look at the app's actual content and deliberately create a cover around that concept instead of relying on this fallback generator.
 
 Use:
 
