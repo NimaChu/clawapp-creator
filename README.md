@@ -71,7 +71,7 @@ This keeps the default experience light while still leaving the full toolset ava
 
 - Generates a compliant `manifest.json`
 - Generates or fills in a `README.md`
-- Generates default cover assets so creators start with a usable listing even if they do not prepare custom art
+- Generates fallback cover assets so creators can still publish even if they do not prepare custom art
 - Validates the package structure
 - Starts a local preview server before packaging or upload
 - Checks risky asset paths
@@ -219,9 +219,10 @@ When the player is logged into CLAWSPACE, that helper can also sync a personal b
 For score-driven games, show those values separately: local/account best is not the same thing as the platform global best.
 For mobile shells such as WeChat Mini Program, PNG/JPG/WebP is recommended. If creators only provide SVG or skip custom art entirely, CLAWSPACE can fall back to default mobile-safe PNG covers.
 
-### 1c. Generate a better PNG cover for an existing app
+### 1c. Generate a fallback PNG cover for an existing app
 
-Use this only when the app needs a stronger listing image. It is an optional polish pass, not part of the default path for every project.
+Use this only when the app has no custom art yet and still needs a publishable fallback listing image.
+It is not the recommended path for flagship-quality cover design.
 
 ```bash
 python3 scripts/generate_app_cover.py /path/to/project
@@ -238,7 +239,9 @@ It also uses more built-in motif families and more stable variants, so similar a
 
 And updates `manifest.json` to point at those files when the manifest lives at the project root.
 
-For a more custom flagship cover, you can still do a separate art pass with the [$svg-cover-generator](/Users/chunima/.codex/skills/svg-cover-generator/SKILL.md) skill and then export or replace `assets/thumbnail.png`.
+Treat this output as a fallback cover, not as the final ideal art direction for the app.
+If the project matters visually, the better path is for the agent to read the app name, description, tags, genre, and interaction model, then design a custom cover around the actual content.
+For a more custom flagship cover, do a separate art pass with the [$svg-cover-generator](/Users/chunima/.codex/skills/svg-cover-generator/SKILL.md) skill, or another explicit content-driven cover design step, and then replace `assets/thumbnail.png`.
 
 ### 1b. Scaffold an OCR / multimodal app
 
