@@ -656,14 +656,9 @@ def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif:
 
 
 def create_default_assets(assets_dir: Path, template_name: str, slug: str = "") -> tuple[str, str]:
-    thumbnail_path = assets_dir / "thumbnail.png"
-    icon_path = assets_dir / "icon.png"
-    motif = infer_art_direction(template_name, slug)
-    variant = choose_cover_variant(template_name, slug, motif)
-    palette = vary_palette(TEMPLATE_PALETTES[template_name], variant)
-    create_thumbnail_png(thumbnail_path, palette, motif, variant)
-    create_icon_png(icon_path, palette, motif, variant)
-    return "assets/thumbnail.png", "assets/icon.png"
+    from cover_engine import create_default_assets as build_default_assets
+
+    return build_default_assets(assets_dir, template_name, slug)
 
 
 def resolve_output_dir(out_arg: str | None, slug: str) -> Path:
