@@ -5,39 +5,15 @@ import argparse
 import json
 from pathlib import Path
 
-from scaffold_mini_game import (
-    TEMPLATE_PALETTES,
+from cover_engine import (
     choose_cover_variant,
     create_icon_png,
     create_thumbnail_png,
     infer_art_direction,
+    pick_palette_for_manifest,
     slugify,
-    stable_string_hash,
     vary_palette,
 )
-
-
-def pick_palette(manifest: dict, motif: str) -> dict[str, tuple[int, int, int]]:
-    tags = " ".join(str(item).lower() for item in manifest.get("tags", []))
-    category = str(manifest.get("category", "")).lower()
-    model_category = str(manifest.get("modelCategory", "")).lower()
-    name = str(manifest.get("name", "")).lower()
-    description = str(manifest.get("description", "")).lower()
-    text = " ".join([tags, category, model_category, name, description])
-
-    if any(keyword in text for keyword in ("ocr", "vision", "scan", "image")):
-        return TEMPLATE_PALETTES["ocr-tool"]
-    if any(keyword in text for keyword in ("ai", "rewrite", "llm", "chat", "text")):
-        return TEMPLATE_PALETTES["ai-rewriter"]
-    if any(keyword in text for keyword in ("timer", "focus", "productivity", "utility", "tool")):
-        return TEMPLATE_PALETTES["focus-timer"]
-    if any(keyword in text for keyword in ("memory", "flip", "card", "puzzle")):
-        return TEMPLATE_PALETTES["memory-flip"]
-    if any(keyword in text for keyword in ("game", "arcade", "adventure", "action", "rpg", "orbit", "heist")):
-        return TEMPLATE_PALETTES["orbit-tap"]
-
-    palette_keys = list(TEMPLATE_PALETTES)
-    return TEMPLATE_PALETTES[palette_keys[stable_string_hash(motif) % len(palette_keys)]]
 
 
 def load_manifest(project_dir: Path, manifest_path: Path | None) -> tuple[Path, dict]:
@@ -82,9 +58,18 @@ def main() -> None:
     assets_dir = resolve_assets_dir(project_dir, Path(args.assets_dir).expanduser().resolve() if args.assets_dir else None)
 
     slug = slugify(str(manifest.get("slug") or manifest.get("id") or project_dir.name))
-    motif = args.motif or infer_art_direction("generic", slug)
+    hint_text = " ".join(
+        [
+            str(manifest.get("name", "")),
+            str(manifest.get("description", "")),
+            str(manifest.get("category", "")),
+            str(manifest.get("modelCategory", "")),
+            " ".join(str(item) for item in manifest.get("tags", [])),
+        ]
+    )
+    motif = args.motif or infer_art_direction("generic", slug, hint_text)
     variant = choose_cover_variant("generic", slug, motif)
-    palette = vary_palette(pick_palette(manifest, motif), variant)
+    palette = vary_palette(pick_palette_for_manifest(manifest, motif), variant)
 
     thumbnail_path = assets_dir / "thumbnail.png"
     icon_path = assets_dir / "icon.png"
