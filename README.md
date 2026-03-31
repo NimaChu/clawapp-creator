@@ -243,6 +243,16 @@ Treat this output as a fallback cover, not as the final ideal art direction for 
 If the project matters visually, the better path is for the agent to read the app name, description, tags, genre, and interaction model, then design a custom cover around the actual content.
 For a more custom flagship cover, do a separate art pass with the [$svg-cover-generator](/Users/chunima/.codex/skills/svg-cover-generator/SKILL.md) skill, or another explicit content-driven cover design step, and then replace `assets/thumbnail.png`.
 
+As a practical decision rule:
+
+- use the fallback generator only when the app has no cover and just needs a safe publishable listing image
+- switch to a content-driven cover pass when the user cares about branding, originality, or first impressions
+- switch to a content-driven cover pass when the app is likely to be featured, shared, or treated as a showcase project
+- switch to a content-driven cover pass when the app's real hook is specific enough that a generic category image would feel misleading
+- switch to a content-driven cover pass when the fallback art does not communicate the actual gameplay loop, tool surface, or mood
+
+In that stronger path, the agent should read the app's actual concept first and design around what makes this specific project memorable, instead of relying on generic motif rules alone.
+
 ### 1b. Scaffold an OCR / multimodal app
 
 ```bash
