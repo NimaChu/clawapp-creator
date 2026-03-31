@@ -121,6 +121,10 @@ def choose_cover_variant(template_name: str, slug: str, motif: str) -> int:
     return stable_string_hash(f"{template_name}:{slug}:{motif}") % COVER_VARIANT_COUNT
 
 
+def build_cover_seed(template_name: str, slug: str, motif: str) -> int:
+    return stable_string_hash(f"seed:{template_name}:{slug}:{motif}")
+
+
 def vary_palette(
     palette: dict[str, tuple[int, int, int]],
     variant: int,
@@ -229,10 +233,11 @@ def create_default_assets(assets_dir: Path, template_name: str, slug: str = "") 
     icon_path = assets_dir / "icon.png"
     motif = infer_art_direction(template_name, slug)
     variant = choose_cover_variant(template_name, slug, motif)
+    seed = build_cover_seed(template_name, slug, motif)
     base_palette = TEMPLATE_PALETTES.get(template_name) or TEMPLATE_PALETTES[MOTIF_TO_PALETTE.get(motif, "orbit-tap")]
     palette = vary_palette(base_palette, variant)
-    create_thumbnail_png(thumbnail_path, palette, motif, variant)
-    create_icon_png(icon_path, palette, motif, variant)
+    create_thumbnail_png(thumbnail_path, palette, motif, variant, seed)
+    create_icon_png(icon_path, palette, motif, variant, seed)
     return "assets/thumbnail.png", "assets/icon.png"
 
 
@@ -333,7 +338,7 @@ def _draw_lobster_badge(base: tuple[int, int, int], x: int, y: int, width: int, 
     return base
 
 
-def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], motif: str, variant: int = 0) -> None:
+def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], motif: str, variant: int = 0, seed: int = 0) -> None:
     width, height = 1024, 576
     background = palette["background"]
     primary = palette["primary"]
@@ -341,6 +346,9 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], m
     accent = palette["accent"]
     white = (248, 251, 255)
     variant_shift = (variant - ((COVER_VARIANT_COUNT - 1) / 2)) / COVER_VARIANT_COUNT
+    seed_x = ((seed % 19) - 9) / 120.0
+    seed_y = (((seed // 19) % 17) - 8) / 140.0
+    seed_scale = 1 + ((((seed // 323) % 9) - 4) * 0.018)
 
     def pixel_at(x: int, y: int) -> bytes:
         horizontal = x / max(1, width - 1)
@@ -349,8 +357,8 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], m
         base = _blend(base, secondary, horizontal * 0.22)
 
         glow_points = [
-            (width * (0.22 + variant_shift * 0.08), height * 0.26, accent, width * 0.24),
-            (width * (0.76 - variant_shift * 0.06), height * 0.76, white, width * 0.18),
+            (width * (0.22 + variant_shift * 0.08 + seed_x), height * (0.26 + seed_y * 0.6), accent, width * (0.24 * seed_scale)),
+            (width * (0.76 - variant_shift * 0.06 - seed_x * 0.4), height * (0.76 - seed_y * 0.5), white, width * (0.18 * (2 - seed_scale))),
         ]
         for gx, gy, color, radius in glow_points:
             distance = math.hypot(x - gx, y - gy)
@@ -359,115 +367,115 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], m
                 base = _blend(base, color, glow * 0.34)
 
         if motif == "arcade-orbit":
-            if _ring(x, y, width * 0.61, height * 0.56, width * 0.2 + variant_shift * 32, 4.5):
+            if _ring(x, y, width * (0.61 + seed_x * 0.4), height * (0.56 + seed_y * 0.4), width * (0.2 * seed_scale) + variant_shift * 32, 4.5):
                 base = _mix(base, white, 0.7)
-            if _circle(x, y, width * 0.34, height * 0.36, width * 0.085):
+            if _circle(x, y, width * (0.34 + seed_x * 0.7), height * (0.36 + seed_y * 0.4), width * (0.085 * seed_scale)):
                 base = _mix(base, accent, 0.9)
-            if _circle(x, y, width * 0.72, height * 0.5, width * 0.09):
+            if _circle(x, y, width * (0.72 - seed_x * 0.5), height * (0.5 - seed_y * 0.4), width * (0.09 * (2 - seed_scale))):
                 base = _mix(base, secondary, 0.9)
         elif motif == "space-heist":
-            if _ellipse(x, y, width * 0.54, height * 0.6, width * 0.17, height * 0.09):
+            if _ellipse(x, y, width * (0.54 + seed_x * 0.4), height * (0.6 + seed_y * 0.35), width * (0.17 * seed_scale), height * (0.09 * seed_scale)):
                 base = _mix(base, secondary, 0.92)
-            if _distance_to_segment(x, y, width * 0.36, height * 0.44, width * 0.72, height * 0.34) < 7:
+            if _distance_to_segment(x, y, width * (0.36 + seed_x * 0.6), height * (0.44 - seed_y * 0.4), width * (0.72 - seed_x * 0.4), height * (0.34 + seed_y * 0.3)) < 7:
                 base = _mix(base, white, 0.78)
-            if _triangle_lock(x, y, width * 0.72, height * 0.54, 72):
+            if _triangle_lock(x, y, width * (0.72 - seed_x * 0.45), height * (0.54 + seed_y * 0.35), 72 * seed_scale):
                 base = _mix(base, accent, 0.88)
         elif motif == "arcade-shooter":
-            if _ring(x, y, width * 0.58, height * 0.48, width * 0.12, 3.5) or _ring(x, y, width * 0.58, height * 0.48, width * 0.06, 2.5):
+            if _ring(x, y, width * (0.58 + seed_x * 0.45), height * (0.48 + seed_y * 0.3), width * (0.12 * seed_scale), 3.5) or _ring(x, y, width * (0.58 + seed_x * 0.45), height * (0.48 + seed_y * 0.3), width * (0.06 * seed_scale), 2.5):
                 base = _mix(base, white, 0.78)
-            if _distance_to_segment(x, y, width * 0.42, height * 0.48, width * 0.74, height * 0.48) < 4 or _distance_to_segment(x, y, width * 0.58, height * 0.32, width * 0.58, height * 0.64) < 4:
+            if _distance_to_segment(x, y, width * (0.42 + seed_x * 0.5), height * (0.48 + seed_y * 0.3), width * (0.74 - seed_x * 0.3), height * (0.48 + seed_y * 0.3)) < 4 or _distance_to_segment(x, y, width * (0.58 + seed_x * 0.4), height * (0.32 - seed_y * 0.35), width * (0.58 + seed_x * 0.4), height * (0.64 + seed_y * 0.25)) < 4:
                 base = _mix(base, accent, 0.82)
-            if _distance_to_segment(x, y, width * 0.28, height * 0.7, width * 0.48, height * 0.54) < 9:
+            if _distance_to_segment(x, y, width * (0.28 + seed_x * 0.55), height * (0.7 + seed_y * 0.2), width * (0.48 + seed_x * 0.2), height * (0.54 - seed_y * 0.3)) < 9:
                 base = _mix(base, primary, 0.9)
         elif motif == "survival-wave":
             for cx in [0.34, 0.5, 0.66]:
-                if _circle(x, y, width * cx, height * 0.58, 42):
+                if _circle(x, y, width * (cx + seed_x * (0.3 if cx < 0.5 else -0.2)), height * (0.58 + seed_y * 0.4), 42 * seed_scale):
                     base = _mix(base, primary if cx < 0.5 else secondary, 0.88)
-            if _distance_to_segment(x, y, width * 0.28, height * 0.34, width * 0.76, height * 0.74) < 6:
+            if _distance_to_segment(x, y, width * (0.28 + seed_x * 0.4), height * (0.34 - seed_y * 0.35), width * (0.76 - seed_x * 0.35), height * (0.74 + seed_y * 0.3)) < 6:
                 base = _mix(base, accent, 0.8)
         elif motif == "puzzle-cards":
             for left, top, right, bottom, color in [
-                (width * 0.22, height * 0.23, width * 0.42, height * 0.59, primary),
-                (width * 0.41, height * 0.18, width * 0.61, height * 0.54, secondary),
-                (width * 0.6, height * 0.26, width * 0.8, height * 0.62, accent),
+                (width * (0.22 + seed_x * 0.3), height * (0.23 + seed_y * 0.25), width * (0.42 + seed_x * 0.3), height * (0.59 + seed_y * 0.25), primary),
+                (width * (0.41 - seed_x * 0.2), height * (0.18 - seed_y * 0.3), width * (0.61 - seed_x * 0.2), height * (0.54 - seed_y * 0.3), secondary),
+                (width * (0.6 - seed_x * 0.35), height * (0.26 + seed_y * 0.2), width * (0.8 - seed_x * 0.35), height * (0.62 + seed_y * 0.2), accent),
             ]:
                 if _rect(x, y, left, top, right, bottom):
                     base = _mix(base, color, 0.92)
         elif motif == "block-stack":
             for left, top, right, bottom, color in [
-                (width * 0.28, height * 0.54, width * 0.52, height * 0.66, primary),
-                (width * 0.4, height * 0.42, width * 0.64, height * 0.54, secondary),
-                (width * 0.52, height * 0.3, width * 0.76, height * 0.42, accent),
+                (width * (0.28 + seed_x * 0.3), height * (0.54 + seed_y * 0.2), width * (0.52 + seed_x * 0.3), height * (0.66 + seed_y * 0.2), primary),
+                (width * (0.4 - seed_x * 0.2), height * (0.42 - seed_y * 0.2), width * (0.64 - seed_x * 0.2), height * (0.54 - seed_y * 0.2), secondary),
+                (width * (0.52 + seed_x * 0.1), height * (0.3 - seed_y * 0.25), width * (0.76 + seed_x * 0.1), height * (0.42 - seed_y * 0.25), accent),
             ]:
                 if _rect(x, y, left, top, right, bottom):
                     base = _mix(base, color, 0.94)
         elif motif == "editor-studio" or motif == "drawing-board":
-            if _rect(x, y, width * 0.2, height * 0.2, width * 0.72, height * 0.72):
+            if _rect(x, y, width * (0.2 + seed_x * 0.15), height * (0.2 + seed_y * 0.18), width * (0.72 + seed_x * 0.15), height * (0.72 + seed_y * 0.18)):
                 base = _mix(base, white, 0.24)
-            if _distance_to_segment(x, y, width * 0.62, height * 0.28, width * 0.82, height * 0.72) < 12:
+            if _distance_to_segment(x, y, width * (0.62 + seed_x * 0.3), height * (0.28 - seed_y * 0.2), width * (0.82 - seed_x * 0.2), height * (0.72 + seed_y * 0.25)) < 12:
                 base = _mix(base, accent, 0.9)
-            if motif == "drawing-board" and _ring(x, y, width * 0.44, height * 0.44, width * 0.09, 6):
+            if motif == "drawing-board" and _ring(x, y, width * (0.44 + seed_x * 0.35), height * (0.44 + seed_y * 0.25), width * (0.09 * seed_scale), 6):
                 base = _mix(base, secondary, 0.76)
         elif motif == "planner-board":
-            if _rect(x, y, width * 0.22, height * 0.2, width * 0.78, height * 0.74):
+            if _rect(x, y, width * (0.22 + seed_x * 0.18), height * (0.2 + seed_y * 0.15), width * (0.78 + seed_x * 0.18), height * (0.74 + seed_y * 0.15)):
                 base = _mix(base, white, 0.18)
             for yy in [0.3, 0.42, 0.54, 0.66]:
-                if _distance_to_segment(x, y, width * 0.28, height * yy, width * 0.72, height * yy) < 3:
+                if _distance_to_segment(x, y, width * (0.28 + seed_x * 0.18), height * (yy + seed_y * 0.15), width * (0.72 + seed_x * 0.18), height * (yy + seed_y * 0.15)) < 3:
                     base = _mix(base, primary, 0.72)
-            if _rect(x, y, width * 0.28, height * 0.3, width * 0.38, height * 0.42):
+            if _rect(x, y, width * (0.28 + seed_x * 0.18), height * (0.3 + seed_y * 0.15), width * (0.38 + seed_x * 0.18), height * (0.42 + seed_y * 0.15)):
                 base = _mix(base, accent, 0.88)
         elif motif == "calculator-panel":
-            if _rect(x, y, width * 0.28, height * 0.16, width * 0.74, height * 0.76):
+            if _rect(x, y, width * (0.28 + seed_x * 0.2), height * (0.16 + seed_y * 0.12), width * (0.74 + seed_x * 0.2), height * (0.76 + seed_y * 0.12)):
                 base = _mix(base, white, 0.14)
-            if _rect(x, y, width * 0.34, height * 0.24, width * 0.68, height * 0.34):
+            if _rect(x, y, width * (0.34 + seed_x * 0.2), height * (0.24 + seed_y * 0.12), width * (0.68 + seed_x * 0.2), height * (0.34 + seed_y * 0.12)):
                 base = _mix(base, secondary, 0.76)
             for row in range(3):
                 for col in range(3):
-                    left = width * (0.34 + col * 0.12)
-                    top = height * (0.42 + row * 0.1)
+                    left = width * (0.34 + col * 0.12 + seed_x * 0.18)
+                    top = height * (0.42 + row * 0.1 + seed_y * 0.1)
                     if _rect(x, y, left, top, left + width * 0.08, top + height * 0.07):
                         base = _mix(base, primary if (row + col) % 2 == 0 else accent, 0.86)
         elif motif == "ai-chat":
-            if _ellipse(x, y, width * 0.42, height * 0.44, width * 0.19, height * 0.13):
+            if _ellipse(x, y, width * (0.42 + seed_x * 0.24), height * (0.44 + seed_y * 0.22), width * (0.19 * seed_scale), height * (0.13 * seed_scale)):
                 base = _mix(base, primary, 0.92)
-            if _ellipse(x, y, width * 0.62, height * 0.58, width * 0.18, height * 0.12):
+            if _ellipse(x, y, width * (0.62 - seed_x * 0.24), height * (0.58 - seed_y * 0.18), width * (0.18 * seed_scale), height * (0.12 * seed_scale)):
                 base = _mix(base, secondary, 0.92)
-            if _distance_to_segment(x, y, width * 0.42, height * 0.58, width * 0.53, height * 0.72) < 9:
+            if _distance_to_segment(x, y, width * (0.42 + seed_x * 0.24), height * (0.58 + seed_y * 0.2), width * (0.53 + seed_x * 0.12), height * (0.72 + seed_y * 0.22)) < 9:
                 base = _mix(base, accent, 0.84)
         elif motif == "ocr-scan":
-            if _rect(x, y, width * 0.28, height * 0.14, width * 0.72, height * 0.8):
+            if _rect(x, y, width * (0.28 + seed_x * 0.16), height * (0.14 + seed_y * 0.12), width * (0.72 + seed_x * 0.16), height * (0.8 + seed_y * 0.12)):
                 base = _mix(base, white, 0.22)
-            if _rect(x, y, width * 0.34, height * 0.3, width * 0.66, height * 0.66):
-                border = abs(x - width * 0.34) < 5 or abs(x - width * 0.66) < 5 or abs(y - height * 0.3) < 5 or abs(y - height * 0.66) < 5
+            if _rect(x, y, width * (0.34 + seed_x * 0.14), height * (0.3 + seed_y * 0.1), width * (0.66 + seed_x * 0.14), height * (0.66 + seed_y * 0.1)):
+                border = abs(x - width * (0.34 + seed_x * 0.14)) < 5 or abs(x - width * (0.66 + seed_x * 0.14)) < 5 or abs(y - height * (0.3 + seed_y * 0.1)) < 5 or abs(y - height * (0.66 + seed_y * 0.1)) < 5
                 if border:
                     base = _mix(base, accent, 0.9)
-            if _distance_to_segment(x, y, width * 0.34, height * 0.22, width * 0.62, height * 0.22) < 4:
+            if _distance_to_segment(x, y, width * (0.34 + seed_x * 0.14), height * (0.22 + seed_y * 0.1), width * (0.62 + seed_x * 0.14), height * (0.22 + seed_y * 0.1)) < 4:
                 base = _mix(base, primary, 0.75)
         elif motif == "story-cosmos":
-            if _rect(x, y, width * 0.3, height * 0.22, width * 0.72, height * 0.72):
+            if _rect(x, y, width * (0.3 + seed_x * 0.14), height * (0.22 + seed_y * 0.14), width * (0.72 + seed_x * 0.14), height * (0.72 + seed_y * 0.14)):
                 base = _mix(base, white, 0.18)
-            if _distance_to_segment(x, y, width * 0.51, height * 0.22, width * 0.51, height * 0.72) < 4:
+            if _distance_to_segment(x, y, width * (0.51 + seed_x * 0.15), height * (0.22 + seed_y * 0.14), width * (0.51 + seed_x * 0.15), height * (0.72 + seed_y * 0.14)) < 4:
                 base = _mix(base, secondary, 0.72)
-            if _circle(x, y, width * 0.76, height * 0.26, 18) or _circle(x, y, width * 0.82, height * 0.34, 12):
+            if _circle(x, y, width * (0.76 - seed_x * 0.2), height * (0.26 - seed_y * 0.2), 18 * seed_scale) or _circle(x, y, width * (0.82 - seed_x * 0.22), height * (0.34 - seed_y * 0.22), 12 * seed_scale):
                 base = _mix(base, accent, 0.92)
         elif motif == "education-lab":
-            if _rect(x, y, width * 0.2, height * 0.22, width * 0.78, height * 0.74):
+            if _rect(x, y, width * (0.2 + seed_x * 0.16), height * (0.22 + seed_y * 0.14), width * (0.78 + seed_x * 0.16), height * (0.74 + seed_y * 0.14)):
                 base = _mix(base, white, 0.16)
-            if _distance_to_segment(x, y, width * 0.32, height * 0.34, width * 0.68, height * 0.62) < 8:
+            if _distance_to_segment(x, y, width * (0.32 + seed_x * 0.18), height * (0.34 - seed_y * 0.12), width * (0.68 - seed_x * 0.15), height * (0.62 + seed_y * 0.14)) < 8:
                 base = _mix(base, primary, 0.84)
-            if _distance_to_segment(x, y, width * 0.48, height * 0.3, width * 0.48, height * 0.68) < 5:
+            if _distance_to_segment(x, y, width * (0.48 + seed_x * 0.12), height * (0.3 - seed_y * 0.12), width * (0.48 + seed_x * 0.12), height * (0.68 + seed_y * 0.14)) < 5:
                 base = _mix(base, accent, 0.78)
         elif motif == "rhythm-stage":
             bars = [0.3, 0.4, 0.5, 0.6, 0.7]
             heights = [0.16, 0.28, 0.38, 0.26, 0.18]
             for idx, center in enumerate(bars):
-                left = width * center - width * 0.04
-                top = height * (0.66 - heights[idx] - variant_shift * 0.04)
-                right = width * center + width * 0.04
-                bottom = height * 0.66
+                left = width * (center + seed_x * 0.14) - width * 0.04
+                top = height * (0.66 - heights[idx] - variant_shift * 0.04 + seed_y * 0.12)
+                right = width * (center + seed_x * 0.14) + width * 0.04
+                bottom = height * (0.66 + seed_y * 0.12)
                 if _rect(x, y, left, top, right, bottom):
                     base = _mix(base, primary if idx % 2 == 0 else accent, 0.9)
-            if _distance_to_segment(x, y, width * 0.24, height * 0.34, width * 0.78, height * 0.3) < 4:
+            if _distance_to_segment(x, y, width * (0.24 + seed_x * 0.16), height * (0.34 - seed_y * 0.12), width * (0.78 - seed_x * 0.14), height * (0.3 - seed_y * 0.1)) < 4:
                 base = _mix(base, secondary, 0.82)
 
         base = _draw_lobster_badge(base, x, y, width, height, variant)
@@ -476,13 +484,16 @@ def create_thumbnail_png(path: Path, palette: dict[str, tuple[int, int, int]], m
     write_png(path, width, height, pixel_at)
 
 
-def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif: str, variant: int = 0) -> None:
+def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif: str, variant: int = 0, seed: int = 0) -> None:
     size = 384
     background = palette["background"]
     primary = palette["primary"]
     secondary = palette["secondary"]
     accent = palette["accent"]
     white = (249, 251, 255)
+    seed_x = ((seed % 17) - 8) / 120.0
+    seed_y = (((seed // 17) % 17) - 8) / 120.0
+    seed_scale = 1 + ((((seed // 289) % 9) - 4) * 0.018)
 
     def pixel_at(x: int, y: int) -> bytes:
         horizontal = x / max(1, size - 1)
@@ -490,39 +501,39 @@ def create_icon_png(path: Path, palette: dict[str, tuple[int, int, int]], motif:
         base = _blend(background, primary, vertical * 0.32)
         base = _blend(base, secondary, horizontal * 0.16)
 
-        if _ring(x, y, size * 0.5, size * 0.5, size * 0.32, 8):
+        if _ring(x, y, size * (0.5 + seed_x * 0.1), size * (0.5 + seed_y * 0.1), size * (0.32 * seed_scale), 8):
             base = _mix(base, white, 0.5)
 
         if motif in ("arcade-orbit", "space-heist", "arcade-shooter", "survival-wave"):
-            if _circle(x, y, size * 0.56, size * 0.5, size * 0.1):
+            if _circle(x, y, size * (0.56 + seed_x * 0.16), size * (0.5 + seed_y * 0.12), size * (0.1 * seed_scale)):
                 base = _mix(base, accent, 0.9)
         elif motif in ("puzzle-cards", "block-stack"):
-            if _rect(x, y, size * 0.3, size * 0.34, size * 0.52, size * 0.56) or _rect(x, y, size * 0.48, size * 0.46, size * 0.7, size * 0.68):
+            if _rect(x, y, size * (0.3 + seed_x * 0.12), size * (0.34 + seed_y * 0.1), size * (0.52 + seed_x * 0.12), size * (0.56 + seed_y * 0.1)) or _rect(x, y, size * (0.48 - seed_x * 0.1), size * (0.46 - seed_y * 0.1), size * (0.7 - seed_x * 0.1), size * (0.68 - seed_y * 0.1)):
                 base = _mix(base, primary, 0.9)
         elif motif in ("editor-studio", "drawing-board"):
-            if _rect(x, y, size * 0.26, size * 0.28, size * 0.72, size * 0.72):
+            if _rect(x, y, size * (0.26 + seed_x * 0.1), size * (0.28 + seed_y * 0.1), size * (0.72 + seed_x * 0.1), size * (0.72 + seed_y * 0.1)):
                 base = _mix(base, white, 0.2)
-            if _distance_to_segment(x, y, size * 0.54, size * 0.3, size * 0.76, size * 0.72) < 10:
+            if _distance_to_segment(x, y, size * (0.54 + seed_x * 0.14), size * (0.3 - seed_y * 0.08), size * (0.76 - seed_x * 0.1), size * (0.72 + seed_y * 0.1)) < 10:
                 base = _mix(base, accent, 0.86)
         elif motif in ("planner-board", "calculator-panel", "ocr-scan", "education-lab", "story-cosmos", "ai-chat", "rhythm-stage"):
-            if _rect(x, y, size * 0.24, size * 0.24, size * 0.76, size * 0.76):
+            if _rect(x, y, size * (0.24 + seed_x * 0.08), size * (0.24 + seed_y * 0.08), size * (0.76 + seed_x * 0.08), size * (0.76 + seed_y * 0.08)):
                 base = _mix(base, white, 0.18)
             if motif == "rhythm-stage":
-                if _rect(x, y, size * 0.32, size * 0.46, size * 0.4, size * 0.7) or _rect(x, y, size * 0.48, size * 0.34, size * 0.56, size * 0.7) or _rect(x, y, size * 0.64, size * 0.52, size * 0.72, size * 0.7):
+                if _rect(x, y, size * (0.32 + seed_x * 0.1), size * (0.46 + seed_y * 0.08), size * (0.4 + seed_x * 0.1), size * (0.7 + seed_y * 0.08)) or _rect(x, y, size * (0.48 + seed_x * 0.1), size * (0.34 + seed_y * 0.08), size * (0.56 + seed_x * 0.1), size * (0.7 + seed_y * 0.08)) or _rect(x, y, size * (0.64 + seed_x * 0.1), size * (0.52 + seed_y * 0.08), size * (0.72 + seed_x * 0.1), size * (0.7 + seed_y * 0.08)):
                     base = _mix(base, primary, 0.88)
             elif motif == "ai-chat":
-                if _ellipse(x, y, size * 0.44, size * 0.44, size * 0.15, size * 0.11) or _ellipse(x, y, size * 0.6, size * 0.58, size * 0.14, size * 0.1):
+                if _ellipse(x, y, size * (0.44 + seed_x * 0.1), size * (0.44 + seed_y * 0.08), size * (0.15 * seed_scale), size * (0.11 * seed_scale)) or _ellipse(x, y, size * (0.6 - seed_x * 0.1), size * (0.58 - seed_y * 0.08), size * (0.14 * seed_scale), size * (0.1 * seed_scale)):
                     base = _mix(base, secondary, 0.9)
             elif motif == "ocr-scan":
-                if _rect(x, y, size * 0.34, size * 0.34, size * 0.66, size * 0.66):
-                    border = abs(x - size * 0.34) < 4 or abs(x - size * 0.66) < 4 or abs(y - size * 0.34) < 4 or abs(y - size * 0.66) < 4
+                if _rect(x, y, size * (0.34 + seed_x * 0.08), size * (0.34 + seed_y * 0.08), size * (0.66 + seed_x * 0.08), size * (0.66 + seed_y * 0.08)):
+                    border = abs(x - size * (0.34 + seed_x * 0.08)) < 4 or abs(x - size * (0.66 + seed_x * 0.08)) < 4 or abs(y - size * (0.34 + seed_y * 0.08)) < 4 or abs(y - size * (0.66 + seed_y * 0.08)) < 4
                     if border:
                         base = _mix(base, accent, 0.92)
             elif motif == "calculator-panel":
-                if _rect(x, y, size * 0.34, size * 0.3, size * 0.66, size * 0.4):
+                if _rect(x, y, size * (0.34 + seed_x * 0.08), size * (0.3 + seed_y * 0.08), size * (0.66 + seed_x * 0.08), size * (0.4 + seed_y * 0.08)):
                     base = _mix(base, secondary, 0.74)
             else:
-                if _distance_to_segment(x, y, size * 0.34, size * 0.4, size * 0.66, size * 0.6) < 10:
+                if _distance_to_segment(x, y, size * (0.34 + seed_x * 0.08), size * (0.4 + seed_y * 0.08), size * (0.66 - seed_x * 0.08), size * (0.6 - seed_y * 0.08)) < 10:
                     base = _mix(base, primary, 0.84)
 
         base = _draw_lobster_badge(base, x, y, size, size, variant)
