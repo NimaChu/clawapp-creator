@@ -162,6 +162,7 @@ This matters even more for projects that may later appear in mobile shells such 
 - `scripts/check_clawspace_account.py`: Verify which CLAWSPACE account the current saved config will use
 - `scripts/scaffold_mini_game.py`: Generate a mini-game scaffold
 - `scripts/generate_app_cover.py`: Generate optional `thumbnail.png` and `icon.png` assets for an existing app
+- `scripts/cover_engine.py`: Shared standalone cover engine used by both scaffolding and post-hoc cover generation
 - `scripts/build_nima_package.py`: Build a platform zip package
 - `scripts/check_game_readiness.py`: Verify game-specific readiness, platform-score wiring, and mobile-first basics
 - `scripts/preview_clawspace_app.py`: Start a local preview server for a CLAWSPACE app
@@ -207,7 +208,8 @@ Every scaffold now includes default cover assets:
 - `assets/thumbnail.png`
 - `assets/icon.png`
 
-These generated covers are now split into stable per-app variants based on the slug, so two different projects in the same broad genre are much less likely to end up with identical listing art.
+These generated covers are now split into stable per-app variants based on the slug, and the cover engine now uses broader motif detection for editors, planners, calculators, rhythm tools, shooters, story pieces, and education apps.
+That makes generated covers noticeably less samey than the earlier single-track defaults.
 
 You can keep the generated assets or replace them later with your own PNG, JPG, WebP, or SVG cover art.
 The scaffold no longer duplicates the same image into `screenshots` by default, which keeps starter packages lighter.
@@ -230,7 +232,9 @@ This generates:
 - `assets/thumbnail.png`
 - `assets/icon.png`
 
-The generated cover is deterministic for that app slug, but it also uses multiple built-in variants so similar apps do not all collapse to the exact same default image.
+The generated cover is deterministic for that app slug, but it no longer depends on the scaffold template path.
+It can run directly against an existing CLAWSPACE app project with a `manifest.json`.
+It also uses more built-in motif families and more stable variants, so similar apps are much less likely to collapse into the exact same generated image.
 
 And updates `manifest.json` to point at those files when the manifest lives at the project root.
 
