@@ -15,7 +15,7 @@ Besides starter templates, use strong live CLAWSPACE apps as reference patterns 
 
 - `gravity-surfer` for score-driven arcade loops, strong feedback, and visible best-score structure
 - `starship-deep-space` for touch-friendly action UI that still works on desktop
-- `orbit-heist` for flagship-feeling arcade polish and responsive playfield framing
+- `orbit-heist` for high-polish arcade feel and responsive playfield framing
 - `classic-tank-game` for simple mobile-friendly action loops with broad accessibility
 - `comeback-project` for practical text-model utility flows
 - `online-ocr-tool` for multimodal upload + OCR integration
@@ -71,17 +71,17 @@ If the app clearly needs a stronger store listing image, you may insert one opti
 
 - if the project has no usable cover yet, run `scripts/generate_app_cover.py` to generate a fallback `assets/thumbnail.png` and `assets/icon.png`
 - if the app needs a real content-fitting cover, do a separate design pass based on the app's actual concept, then replace `assets/thumbnail.png`
-- for a custom flagship cover, prefer a separate pass with [$svg-cover-generator](/Users/chunima/.codex/skills/svg-cover-generator/SKILL.md) or another explicit content-driven design step
+- for a custom high-polish cover, prefer a separate pass with [$svg-cover-generator](/Users/chunima/.codex/skills/svg-cover-generator/SKILL.md) or another explicit content-driven design step
 
 Do not make this cover-generation pass mandatory for every app.
 Treat `generate_app_cover.py` as a standalone cover tool for existing projects, not as something that only works for scaffolded apps.
-Treat its output as a safe fallback, not as the default ideal cover for visually important apps.
+Treat its output as a safe fallback, not as the default ideal cover for presentation-sensitive apps.
 
 When deciding whether to stop at fallback art or do a separate content-driven cover pass, use these triggers:
 
 - use `scripts/generate_app_cover.py` only when the project still has no cover and simply needs a safe publishable listing image
 - switch to a content-driven cover pass when the user explicitly cares about branding, originality, or first impression quality
-- switch to a content-driven cover pass when the app is likely to be featured, showcased, or shared in screenshots, WeChat, or social posts
+- switch to a content-driven cover pass when the app is meant to feel distinctive in screenshots, WeChat sharing, social posts, or other public-facing contexts
 - switch to a content-driven cover pass when the app's real hook is specific enough that a generic category illustration would miss the point
 - switch to a content-driven cover pass when the fallback art does not communicate the actual gameplay loop, tool surface, or mood
 
@@ -290,7 +290,7 @@ python3 scripts/generate_app_cover.py /path/to/project
 This is a lightweight fallback step for listings. It should stay optional.
 It now produces deterministic but more varied fallback outputs, and it can run directly on an existing app project without depending on scaffolded template files.
 Do not mistake that for true bespoke cover design.
-If the app is visually important, the agent should look at the app's actual content and deliberately create a cover around that concept instead of relying on this fallback generator.
+If the app is presentation-sensitive, the agent should look at the app's actual content and deliberately create a cover around that concept instead of relying on this fallback generator.
 
 Use:
 
