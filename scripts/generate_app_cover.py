@@ -35,7 +35,7 @@ def resolve_assets_dir(project_dir: Path, explicit_assets: Path | None) -> Path:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Generate CLAWSPACE cover assets (thumbnail.png + icon.png) for an existing app project.",
+        description="Generate fallback CLAWSPACE cover assets (thumbnail.png + icon.png) for an existing app project.",
     )
     parser.add_argument("project", help="Path to the app project root")
     parser.add_argument("--manifest", help="Optional explicit path to manifest.json")
@@ -105,7 +105,8 @@ def main() -> None:
     print(f"Generated: {icon_path}")
     if manifest_updated and manifest_path.parent == project_dir:
         print("Updated manifest fields: thumbnail, icon")
-    print("Tip: for a higher-end hero cover, run a separate design pass with the $svg-cover-generator skill and then replace assets/thumbnail.png.")
+    print("Tip: this script is for fallback listing art.")
+    print("For a cover that truly fits the app or game, do a separate content-driven cover design pass and then replace assets/thumbnail.png.")
 
 
 if __name__ == "__main__":
