@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from cover_engine import (
+    build_cover_seed,
     choose_cover_variant,
     create_icon_png,
     create_thumbnail_png,
@@ -69,6 +70,7 @@ def main() -> None:
     )
     motif = args.motif or infer_art_direction("generic", slug, hint_text)
     variant = choose_cover_variant("generic", slug, motif)
+    seed = build_cover_seed("generic", slug, motif)
     palette = vary_palette(pick_palette_for_manifest(manifest, motif), variant)
 
     thumbnail_path = assets_dir / "thumbnail.png"
@@ -81,8 +83,8 @@ def main() -> None:
                 "refusing to overwrite existing assets without --force: " + ", ".join(existing)
             )
 
-    create_thumbnail_png(thumbnail_path, palette, motif, variant)
-    create_icon_png(icon_path, palette, motif, variant)
+    create_thumbnail_png(thumbnail_path, palette, motif, variant, seed)
+    create_icon_png(icon_path, palette, motif, variant, seed)
 
     manifest_updated = False
     if manifest.get("thumbnail") != "assets/thumbnail.png":
