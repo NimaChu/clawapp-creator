@@ -77,6 +77,17 @@ Do not make this cover-generation pass mandatory for every app.
 Treat `generate_app_cover.py` as a standalone cover tool for existing projects, not as something that only works for scaffolded apps.
 Treat its output as a safe fallback, not as the default ideal cover for visually important apps.
 
+When deciding whether to stop at fallback art or do a separate content-driven cover pass, use these triggers:
+
+- use `scripts/generate_app_cover.py` only when the project still has no cover and simply needs a safe publishable listing image
+- switch to a content-driven cover pass when the user explicitly cares about branding, originality, or first impression quality
+- switch to a content-driven cover pass when the app is likely to be featured, showcased, or shared in screenshots, WeChat, or social posts
+- switch to a content-driven cover pass when the app's real hook is specific enough that a generic category illustration would miss the point
+- switch to a content-driven cover pass when the fallback art does not communicate the actual gameplay loop, tool surface, or mood
+
+In that stronger path, read the app's name, summary, tags, genre, interaction model, and standout mechanic first.
+Design the cover around what users will actually remember about the app, not just around its broad category.
+
 ### 2. First-time setup
 
 Only enter this path when the user is brand-new, has no saved credentials, or wants to switch accounts:
